@@ -1,4 +1,4 @@
-use crate::bpmn::common::{ControlFlow};
+use crate::bpmn::edge::{ControlFlow};
 use std::collections::HashSet;
 
 /// BPMN Collaboration elements.

@@ -1,4 +1,4 @@
-use crate::bpmn::common::{ControlFlow};
+use crate::bpmn::edge::{ControlFlow};
 use std::collections::HashSet;
 
 /// BPMN Choreography elements.
@@ -15,7 +15,7 @@ use std::collections::HashSet;
 /// orSplit(e,E)
 /// orJoin(E,e)
 #[derive(Debug, Clone)]
-pub enum ChoreographyElement {
+pub enum ChoreographyEl {
     Start {
         output: ControlFlow,
     },
@@ -55,5 +55,5 @@ pub enum ChoreographyElement {
 /// A BPMN choreography is the parallel composition of basic terms.
 #[derive(Debug, Clone, Default)]
 pub struct Choreography {
-    pub elements: Vec<ChoreographyElement>,
+    pub elements: Vec<ChoreographyEl>,
 }
