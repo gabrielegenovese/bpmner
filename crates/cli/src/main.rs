@@ -1,6 +1,6 @@
 use core::bpmn::edge::ControlFlow;
 use core::bpmn::chor::{Choreography, ChoreographyEl};
-use core::encoder::encoder::encode_with_init;
+use core::encoder::enc::encode_with_init;
 
 fn main() {
     let mut task = Vec::new();
