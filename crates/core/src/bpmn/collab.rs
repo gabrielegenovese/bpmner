@@ -1,4 +1,4 @@
-use crate::bpmn::common::{CFlow};
+use crate::bpmn::common::{ControlFlow};
 use std::collections::HashSet;
 
 /// BPMN Collaboration elements.
@@ -16,30 +16,30 @@ use std::collections::HashSet;
 #[derive(Debug, Clone)]
 pub enum CollaborationElement {
     Start {
-        out: CFlow,
+        output: ControlFlow,
     },
     End {
-        input: CFlow,
+        input: ControlFlow,
     },
     Task {
-        input: CFlow,
-        output: CFlow,
+        input: ControlFlow,
+        output: ControlFlow,
     },
     AndSplit {
-        input: CFlow,
-        outputs: HashSet<CFlow>,
+        input: ControlFlow,
+        output: HashSet<ControlFlow>,
     },
     AndJoin {
-        inputs: HashSet<CFlow>,
-        output: CFlow,
+        inputs: HashSet<ControlFlow>,
+        output: ControlFlow,
     },
     XorSplit {
-        input: CFlow,
-        outputs: HashSet<CFlow>,
+        input: ControlFlow,
+        output: HashSet<ControlFlow>,
     },
     XorJoin {
-        inputs: HashSet<CFlow>,
-        output: CFlow,
+        inputs: HashSet<ControlFlow>,
+        output: ControlFlow,
     },
 }
 
