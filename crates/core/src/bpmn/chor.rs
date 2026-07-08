@@ -31,7 +31,7 @@ pub enum ChoreographyEl {
         output: HashSet<ControlFlow>,
     },
     AndJoin {
-        inputs: HashSet<ControlFlow>,
+        input: HashSet<ControlFlow>,
         output: ControlFlow,
     },
     XorSplit {
@@ -39,7 +39,7 @@ pub enum ChoreographyEl {
         output: HashSet<ControlFlow>,
     },
     XorJoin {
-        inputs: HashSet<ControlFlow>,
+        input: HashSet<ControlFlow>,
         output: ControlFlow,
     },
     OrSplit {
@@ -47,7 +47,7 @@ pub enum ChoreographyEl {
         output: HashSet<ControlFlow>,
     },
     OrJoin {
-        inputs: HashSet<ControlFlow>,
+        input: HashSet<ControlFlow>,
         output: ControlFlow,
     },
 }

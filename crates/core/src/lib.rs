@@ -13,4 +13,5 @@ pub mod petri_net {
 pub mod encoder {
     pub mod enc;
     pub mod preproc;
+    pub mod util;
 }
