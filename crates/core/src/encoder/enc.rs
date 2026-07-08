@@ -1,4 +1,4 @@
-use crate::bpmn::chor::{Choreography, ChoreographyEl};
+use crate::bpmn::chor::{Chor, ChorEl};
 use crate::bpmn::edge::ControlFlow;
 use crate::encoder::util::{FreshIdGen, negate, powerset_non_empty, subset_transition_name};
 use crate::petri_net::pn::PetriNet;
@@ -174,26 +174,22 @@ fn encode_or_join(
     (generator, net)
 }
 
-fn encode_element(generator: FreshIdGen, element: &ChoreographyEl) -> (FreshIdGen, PetriNet) {
+fn encode_element(generator: FreshIdGen, element: &ChorEl) -> (FreshIdGen, PetriNet) {
     match element {
-        ChoreographyEl::Start { output } => encode_start(generator, output),
-        ChoreographyEl::End { input } => encode_end(generator, input),
-        ChoreographyEl::Task { input, output } => encode_task(generator, input, output),
-        ChoreographyEl::AndSplit { input, output } => encode_and_split(generator, input, output),
-        ChoreographyEl::AndJoin { input, output } => encode_and_join(generator, input, output),
-        ChoreographyEl::XorSplit { input, output } => encode_xor_split(generator, input, output),
-        ChoreographyEl::XorJoin { input, output } => encode_xor_join(generator, input, output),
-        ChoreographyEl::OrSplit { input, output } => encode_or_split(generator, input, output),
-        ChoreographyEl::OrJoin { input, output } => encode_or_join(generator, input, output),
+        ChorEl::Start { output } => encode_start(generator, output),
+        ChorEl::End { input } => encode_end(generator, input),
+        ChorEl::Task { input, output } => encode_task(generator, input, output),
+        ChorEl::AndSplit { input, output } => encode_and_split(generator, input, output),
+        ChorEl::AndJoin { input, output } => encode_and_join(generator, input, output),
+        ChorEl::XorSplit { input, output } => encode_xor_split(generator, input, output),
+        ChorEl::XorJoin { input, output } => encode_xor_join(generator, input, output),
+        ChorEl::OrSplit { input, output } => encode_or_split(generator, input, output),
+        ChorEl::OrJoin { input, output } => encode_or_join(generator, input, output),
     }
 }
 
-fn encode_choreography(
-    generator: FreshIdGen,
-    choreography: &Choreography,
-) -> (FreshIdGen, PetriNet) {
-    choreography
-        .elements
+fn encode_chor(generator: FreshIdGen, chor: &Chor) -> (FreshIdGen, PetriNet) {
+    chor.elements
         .iter()
         .fold((generator, PetriNet::new()), |(generator, net), el| {
             let (generator, el_net) = encode_element(generator, el);
@@ -201,7 +197,7 @@ fn encode_choreography(
         })
 }
 
-pub fn encode_with_init(choreography: &Choreography) -> PetriNet {
-    let (_, net) = encode_choreography(FreshIdGen::new(), choreography);
+pub fn encode_with_init(chor: &Chor) -> PetriNet {
+    let (_, net) = encode_chor(FreshIdGen::new(), chor);
     net
 }

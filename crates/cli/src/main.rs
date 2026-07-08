@@ -1,14 +1,14 @@
-use core::bpmn::chor::{Choreography, ChoreographyEl};
+use core::bpmn::chor::{Chor, ChorEl};
 use core::bpmn::edge::ControlFlow;
 use core::encoder::enc::encode_with_init;
 
 fn main() {
     let mut task = Vec::new();
-    task.push(ChoreographyEl::Task {
+    task.push(ChorEl::Task {
         input: ControlFlow::new("e1"),
         output: ControlFlow::new("e2"),
     });
-    let chor = Choreography { elements: task };
+    let chor = Chor { elements: task };
     println!("{:?}", chor);
     let net = encode_with_init(&chor);
     println!("{:?}", net);

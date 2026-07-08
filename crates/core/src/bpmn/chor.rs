@@ -15,7 +15,7 @@ use std::collections::HashSet;
 /// orSplit(e,E)
 /// orJoin(E,e)
 #[derive(Debug, Clone)]
-pub enum ChoreographyEl {
+pub enum ChorEl {
     Start {
         output: ControlFlow,
     },
@@ -54,6 +54,6 @@ pub enum ChoreographyEl {
 
 /// A BPMN choreography is the parallel composition of basic terms.
 #[derive(Debug, Clone, Default)]
-pub struct Choreography {
-    pub elements: Vec<ChoreographyEl>,
+pub struct Chor {
+    pub elements: Vec<ChorEl>,
 }
