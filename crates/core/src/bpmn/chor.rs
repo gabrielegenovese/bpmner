@@ -1,4 +1,4 @@
-use crate::bpmn::edge::{ControlFlow};
+use crate::bpmn::edge::ControlFlow;
 use std::collections::HashSet;
 
 /// BPMN Choreography elements.
