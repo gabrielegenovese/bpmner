@@ -1,5 +1,5 @@
 use crate::bpmn::edge::ControlFlow;
-use crate::petri_net::pn::{Place, Transition};
+use crate::petri_net::pn::{Arc, PetriNet, Place, Transition};
 use std::collections::{BTreeSet, HashSet};
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -32,10 +32,6 @@ impl FreshIdGen {
     }
 }
 
-pub fn negate(e: &ControlFlow) -> ControlFlow {
-    ControlFlow::new(format!("not_{}", e.id()))
-}
-
 pub fn powerset_non_empty(elements: &HashSet<ControlFlow>) -> Vec<HashSet<ControlFlow>> {
     elements
         .iter()
@@ -54,4 +50,23 @@ pub fn powerset_non_empty(elements: &HashSet<ControlFlow>) -> Vec<HashSet<Contro
 pub fn subset_transition_name(subset: &HashSet<ControlFlow>) -> Transition {
     let ids: BTreeSet<&str> = subset.iter().map(|e| e.id()).collect();
     format!("t_{}", ids.into_iter().collect::<Vec<_>>().join(","))
+}
+
+pub fn negate(e: &ControlFlow) -> ControlFlow {
+    ControlFlow::new(format!("not_{}", e.id()))
+}
+
+fn not_place(p: &str) -> Place {
+    format!("not_{}", p)
+}
+
+fn not_transition(t: &str) -> Transition {
+    format!("not_{}", t)
+}
+
+pub fn encode_dead_propagation_net(pn: &PetriNet) -> PetriNet {
+    pn.flow.iter().fold(PetriNet::new(), |net, arc| match arc {
+        Arc::PT(p, t) => net.arc_pt(not_place(p), not_transition(t)),
+        Arc::TP(t, p) => net.arc_tp(not_transition(t), not_place(p)),
+    })
 }

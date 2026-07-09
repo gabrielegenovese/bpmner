@@ -57,3 +57,25 @@ pub enum ChorEl {
 pub struct Chor {
     pub elements: Vec<ChorEl>,
 }
+
+pub fn edges_of(element: &ChorEl) -> HashSet<ControlFlow> {
+    match element {
+        ChorEl::Start { output } => HashSet::from([output.clone()]),
+        ChorEl::End { input } => HashSet::from([input.clone()]),
+        ChorEl::Task { input, output } => HashSet::from([input.clone(), output.clone()]),
+        ChorEl::AndSplit { input, output }
+        | ChorEl::XorSplit { input, output }
+        | ChorEl::OrSplit { input, output } => output
+            .iter()
+            .cloned()
+            .chain(std::iter::once(input.clone()))
+            .collect(),
+        ChorEl::AndJoin { input, output }
+        | ChorEl::XorJoin { input, output }
+        | ChorEl::OrJoin { input, output } => input
+            .iter()
+            .cloned()
+            .chain(std::iter::once(output.clone()))
+            .collect(),
+    }
+}
