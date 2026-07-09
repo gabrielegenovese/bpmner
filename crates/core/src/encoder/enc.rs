@@ -1,45 +1,11 @@
 use crate::bpmn::chor::{Chor, ChorEl, edges_of};
 use crate::bpmn::edge::ControlFlow;
-use crate::encoder::preproc::phi;
+use crate::encoder::preproc::preproc;
 use crate::encoder::util::{
     FreshIdGen, encode_dead_propagation_net, negate, powerset_non_empty, subset_transition_name,
 };
 use crate::petri_net::pn::PetriNet;
 use std::collections::HashSet;
-
-fn encode_dead_propagation(
-    generator: FreshIdGen,
-    element: &ChorEl,
-    pn: &PetriNet,
-) -> (FreshIdGen, PetriNet) {
-    match element {
-        ChorEl::XorSplit { input, output } | ChorEl::OrSplit { input, output } => {
-            let (generator, t_bar) = generator.fresh_transition("not_split");
-
-            let net = output.iter().fold(
-                PetriNet::new().arc_pt(negate(input).id(), t_bar.clone()),
-                |net, e| net.arc_tp(t_bar.clone(), negate(e).id()),
-            );
-
-            (generator, net)
-        }
-
-        ChorEl::XorJoin { input, output } | ChorEl::OrJoin { input, output } => {
-            let (generator, t_bar) = generator.fresh_transition("not_join");
-
-            let net = input
-                .iter()
-                .fold(PetriNet::new(), |net, e| {
-                    net.arc_pt(negate(e).id(), t_bar.clone())
-                })
-                .arc_tp(t_bar, negate(output).id());
-
-            (generator, net)
-        }
-
-        _ => (generator, encode_dead_propagation_net(pn)),
-    }
-}
 
 /// PN(start(e)) = (P, T, F)
 /// P = {e, p_s} con p_s fresh
@@ -225,13 +191,47 @@ fn encode_element(generator: FreshIdGen, element: &ChorEl) -> (FreshIdGen, Petri
     }
 }
 
+fn encode_dead_propagation(
+    generator: FreshIdGen,
+    element: &ChorEl,
+    pn: &PetriNet,
+) -> (FreshIdGen, PetriNet) {
+    match element {
+        ChorEl::XorSplit { input, output } | ChorEl::OrSplit { input, output } => {
+            let (generator, t_bar) = generator.fresh_transition("not_split");
+
+            let net = output.iter().fold(
+                PetriNet::new().arc_pt(negate(input).id(), t_bar.clone()),
+                |net, e| net.arc_tp(t_bar.clone(), negate(e).id()),
+            );
+
+            (generator, net)
+        }
+
+        ChorEl::XorJoin { input, output } | ChorEl::OrJoin { input, output } => {
+            let (generator, t_bar) = generator.fresh_transition("not_join");
+
+            let net = input
+                .iter()
+                .fold(PetriNet::new(), |net, e| {
+                    net.arc_pt(negate(e).id(), t_bar.clone())
+                })
+                .arc_tp(t_bar, negate(output).id());
+
+            (generator, net)
+        }
+
+        _ => (generator, encode_dead_propagation_net(pn)),
+    }
+}
+
 fn encode_component(
     generator: FreshIdGen,
     element: &ChorEl,
-    phi: &HashSet<ControlFlow>,
+    preproc: &HashSet<ControlFlow>,
 ) -> (FreshIdGen, PetriNet) {
     let (generator, pn) = encode_element(generator, element);
-    let needs_dead_propagation = edges_of(element).is_subset(phi);
+    let needs_dead_propagation = edges_of(element).is_subset(preproc);
 
     if needs_dead_propagation {
         let (generator, dead_pn) = encode_dead_propagation(generator, element, &pn);
@@ -244,17 +244,16 @@ fn encode_component(
 fn encode_chor_full(
     generator: FreshIdGen,
     chor: &Chor,
-    phi: HashSet<ControlFlow>,
+    preproc: HashSet<ControlFlow>,
 ) -> (FreshIdGen, PetriNet) {
     chor.elements
         .iter()
         .fold((generator, PetriNet::new()), |(generator, net), el| {
-            let (generator, el_net) = encode_component(generator, el, &phi);
+            let (generator, el_net) = encode_component(generator, el, &preproc);
             (generator, net.union(el_net))
         })
 }
 
 pub fn encode_with_init(chor: &Chor) -> PetriNet {
-    let (_, net) = encode_chor_full(FreshIdGen::new(), chor, phi(chor));
-    net
+    encode_chor_full(FreshIdGen::new(), chor, preproc(chor)).1
 }
