@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 netcrab = "1.0.2"
+quick-xml = "0.41.0"
+snurr = "0.14.0"

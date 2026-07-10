@@ -49,7 +49,7 @@ pub fn powerset_non_empty(elements: &HashSet<ControlFlow>) -> Vec<HashSet<Contro
 
 pub fn subset_transition_name(subset: &HashSet<ControlFlow>) -> Transition {
     let ids: BTreeSet<&str> = subset.iter().map(|e| e.id()).collect();
-    format!("t_{}", ids.into_iter().collect::<Vec<_>>().join(","))
+    format!("t_{}", ids.into_iter().collect::<Vec<_>>().join(""))
 }
 
 pub fn negate(e: &ControlFlow) -> ControlFlow {

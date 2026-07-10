@@ -1,21 +1,20 @@
 use crate::bpmn::edge::ControlFlow;
 use std::collections::HashSet;
 
-/// BPMN Choreography elements.
+/// BPMN Collaboration elements.
 ///
 /// Corresponds exactly to the grammar:
 ///
 /// start(e)
 /// end(e)
-/// task(e,e')
+/// task(e,e')  TODO: distinguish from Collabeography
 /// andSplit(e,E)
 /// andJoin(E,e)
 /// xorSplit(e,E)
 /// xorJoin(E,e)
-/// orSplit(e,E)
-/// orJoin(E,e)
+/// TODO: ADD UNIQUE COLLABORATION ELEMENTS (event based gateway, send event, receive event)
 #[derive(Debug, Clone)]
-pub enum ChorEl {
+pub enum CollabEl {
     Start {
         output: ControlFlow,
     },
@@ -42,37 +41,31 @@ pub enum ChorEl {
         input: HashSet<ControlFlow>,
         output: ControlFlow,
     },
-    OrSplit {
-        input: ControlFlow,
-        output: HashSet<ControlFlow>,
-    },
-    OrJoin {
-        input: HashSet<ControlFlow>,
-        output: ControlFlow,
-    },
 }
 
-/// A BPMN choreography is the parallel composition of basic terms.
+/// A BPMN Collaboration is the parallel composition of basic terms.
 #[derive(Debug, Clone, Default)]
-pub struct Chor {
-    pub elements: Vec<ChorEl>,
+pub struct Collab {
+    pub elements: Vec<CollabEl>,
 }
 
-pub fn edges_of(element: &ChorEl) -> HashSet<ControlFlow> {
+impl Collab {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+pub fn edges_of(element: &CollabEl) -> HashSet<ControlFlow> {
     match element {
-        ChorEl::Start { output } => HashSet::from([output.clone()]),
-        ChorEl::End { input } => HashSet::from([input.clone()]),
-        ChorEl::Task { input, output } => HashSet::from([input.clone(), output.clone()]),
-        ChorEl::AndSplit { input, output }
-        | ChorEl::XorSplit { input, output }
-        | ChorEl::OrSplit { input, output } => output
+        CollabEl::Start { output } => HashSet::from([output.clone()]),
+        CollabEl::End { input } => HashSet::from([input.clone()]),
+        CollabEl::Task { input, output } => HashSet::from([input.clone(), output.clone()]),
+        CollabEl::AndSplit { input, output } | CollabEl::XorSplit { input, output } => output
             .iter()
             .cloned()
             .chain(std::iter::once(input.clone()))
             .collect(),
-        ChorEl::AndJoin { input, output }
-        | ChorEl::XorJoin { input, output }
-        | ChorEl::OrJoin { input, output } => input
+        CollabEl::AndJoin { input, output } | CollabEl::XorJoin { input, output } => input
             .iter()
             .cloned()
             .chain(std::iter::once(output.clone()))

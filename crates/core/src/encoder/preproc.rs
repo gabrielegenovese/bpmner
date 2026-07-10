@@ -1,4 +1,4 @@
-use crate::bpmn::chor::{Chor, ChorEl, edges_of};
+use crate::bpmn::chor::syntax::{Chor, ChorEl, edges_of};
 use crate::bpmn::edge::ControlFlow;
 use std::collections::HashSet;
 

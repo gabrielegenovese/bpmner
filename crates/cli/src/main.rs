@@ -1,25 +1,24 @@
-use core::bpmn::chor::{Chor, ChorEl};
-use core::bpmn::edge::ControlFlow;
-use core::encoder::enc::encode_with_init;
+use core::bpmn::chor::parser::parse;
+use core::encoder::enc_chor::encode;
 use core::petri_net::exporter::{export_to_dot, export_to_pnml};
-use std::collections::HashSet;
 
 fn main() {
-    let mut el = Vec::new();
-    el.push(ChorEl::XorSplit {
-        input: ControlFlow::new("e1"),
-        output: HashSet::from([ControlFlow::new("e2"), ControlFlow::new("e3")]),
-    });
-    el.push(ChorEl::End {
-        input: ControlFlow::new("e2"),
-    });
+    // let mut el = Vec::new();
+    // el.push(ChorEl::OrSplit {
+    //     input: ControlFlow::new("e1"),
+    //     output: HashSet::from([ControlFlow::new("e2"), ControlFlow::new("e3")]),
+    // });
+    // el.push(ChorEl::End {
+    //     input: ControlFlow::new("e2"),
+    // });
     // el.push(ChorEl::End {
     //     input: ControlFlow::new("e3"),
     // });
-    let chor = Chor { elements: el };
+    // let chor = Chor { elements: el };
+    let chor = parse(include_str!("../../../examples/chor/base.bpmn")).unwrap();
     println!("{:?}", chor);
-    let net = encode_with_init(&chor);
+    let net = encode(&chor);
     println!("{:?}", net);
-    export_to_pnml("test.pnml", &net);
-    export_to_dot("test.dot", &net);
+    export_to_pnml("output/test.pnml", &net);
+    export_to_dot("output/test.dot", &net);
 }

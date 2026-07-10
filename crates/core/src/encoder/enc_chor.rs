@@ -1,4 +1,4 @@
-use crate::bpmn::chor::{Chor, ChorEl, edges_of};
+use crate::bpmn::chor::syntax::{Chor, ChorEl, edges_of};
 use crate::bpmn::edge::ControlFlow;
 use crate::encoder::preproc::preproc;
 use crate::encoder::util::{
@@ -241,7 +241,7 @@ fn encode_component(
     }
 }
 
-fn encode_chor_full(
+fn encode_full(
     generator: FreshIdGen,
     chor: &Chor,
     preproc: HashSet<ControlFlow>,
@@ -254,6 +254,6 @@ fn encode_chor_full(
         })
 }
 
-pub fn encode_with_init(chor: &Chor) -> PetriNet {
-    encode_chor_full(FreshIdGen::new(), chor, preproc(chor)).1
+pub fn encode(chor: &Chor) -> PetriNet {
+    encode_full(FreshIdGen::new(), chor, preproc(chor)).1
 }
