@@ -9,8 +9,8 @@ fn main() {
 
     match cli.command {
         Command::Convert { input, pnml, dot } => {
-            match convert::convert(&input, pnml.as_deref(), dot.as_deref()) {
-                Ok(net) => println!("Conversion completed:\n\n{:?}", net),
+            match convert::convert_file(&input, pnml.as_deref(), dot.as_deref()) {
+                Ok(_) => println!("Conversion completed successfully."),
                 Err(e) => {
                     eprintln!("{e}");
                     std::process::exit(1);

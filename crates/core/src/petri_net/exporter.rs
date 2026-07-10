@@ -1,6 +1,5 @@
 use crate::petri_net::pn::{Arc, PetriNet};
 use std::collections::HashMap;
-use std::fs::File;
 use std::io;
 use thiserror::Error;
 
@@ -22,11 +21,11 @@ pub enum ExportError {
     #[error("failed to add arc while converting petri net: {0}")]
     ArcConversion(String),
 
-    #[error("failed to write PNML: {0}")]
-    Pnml(String),
+    #[error("failed to convert to PNML: {0}")]
+    ConvertPnml(String),
 
-    #[error("failed to write DOT: {0}")]
-    Dot(String),
+    #[error("failed to convert to DOT: {0}")]
+    ConvertDot(String),
 }
 
 fn convert_to_pn_lib(mynet: &PetriNet) -> Result<netcrab::petri_net::PetriNet, ExportError> {
@@ -77,24 +76,14 @@ fn convert_to_pn_lib(mynet: &PetriNet) -> Result<netcrab::petri_net::PetriNet, E
     Ok(new_net)
 }
 
-pub fn export_to_pnml(path: &str, mynet: &PetriNet) -> Result<(), ExportError> {
-    let mut buffer = File::create(path).map_err(|source| ExportError::FileCreation {
-        path: path.to_string(),
-        source,
-    })?;
-
+pub fn export_to_pnml(mynet: &PetriNet) -> Result<String, ExportError> {
     convert_to_pn_lib(mynet)?
-        .to_pnml(&mut buffer)
-        .map_err(|e| ExportError::Pnml(e.to_string()))
+        .to_pnml_string()
+        .map_err(|e| ExportError::ConvertPnml(e.to_string()))
 }
 
-pub fn export_to_dot(path: &str, mynet: &PetriNet) -> Result<(), ExportError> {
-    let mut buffer = File::create(path).map_err(|source| ExportError::FileCreation {
-        path: path.to_string(),
-        source,
-    })?;
-
+pub fn export_to_dot(mynet: &PetriNet) -> Result<String, ExportError> {
     convert_to_pn_lib(mynet)?
-        .to_dot(&mut buffer)
-        .map_err(|e| ExportError::Dot(e.to_string()))
+        .to_dot_string()
+        .map_err(|e| ExportError::ConvertDot(e.to_string()))
 }

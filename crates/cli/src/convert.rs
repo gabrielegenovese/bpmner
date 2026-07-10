@@ -23,6 +23,13 @@ pub enum ConvertError {
         #[source]
         source: std::io::Error,
     },
+
+    #[error("failed to write output file '{path}': {source}")]
+    OutputFile {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
 }
 
 #[derive(Debug)]
@@ -40,7 +47,19 @@ impl std::fmt::Display for WellFormednessErrors {
 
 impl std::error::Error for WellFormednessErrors {}
 
-pub fn convert(
+fn write_output(path: &str, content: &str) -> Result<(), ConvertError> {
+    fs::write(path, content).map_err(|e| ConvertError::OutputFile {
+        path: path.to_string(),
+        source: e,
+    })
+}
+
+pub fn xml_to_net(xml: &str) -> Result<PetriNet, ConvertError> {
+    let chor = parse(xml)?;
+    encode(&chor).map_err(|errs| ConvertError::Encode(WellFormednessErrors(errs)))
+}
+
+pub fn convert_file(
     input: &str,
     output_pnml: Option<&str>,
     output_dot: Option<&str>,
@@ -50,15 +69,20 @@ pub fn convert(
         source: e,
     })?;
 
-    let chor = parse(&xml)?;
-    let net: PetriNet = encode(&chor).map_err(WellFormednessErrors)?;
+    let net = xml_to_net(&xml)?;
 
     if let Some(path) = output_pnml {
-        export_to_pnml(path, &net).map_err(ConvertError::Export)?;
+        write_output(path, &export_to_pnml(&net)?)?;
+        println!("Exported PNML to {path}");
     }
 
     if let Some(path) = output_dot {
-        export_to_dot(path, &net).map_err(ConvertError::Export)?;
+        write_output(path, &export_to_dot(&net)?)?;
+        println!("Exported DOT to {path}");
+    }
+
+    if output_pnml.is_none() && output_dot.is_none() {
+        println!("{net:?}");
     }
 
     Ok(net)
