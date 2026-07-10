@@ -1,6 +1,7 @@
 use crate::bpmn::chor::syntax::{Chor, ChorEl, edges_of};
 use crate::bpmn::edge::ControlFlow;
 use std::collections::{HashMap, HashSet};
+use thiserror::Error;
 
 fn entry_points(element: &ChorEl) -> HashSet<ControlFlow> {
     match element {
@@ -88,13 +89,24 @@ pub fn preproc(chor: &Chor) -> HashSet<ControlFlow> {
 
 /* Well-formedness conditions */
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum WellFormednessError {
+    #[error("choreography has no start element")]
     NoStart,
+
+    #[error("choreography has multiple start elements ({0})")]
     MultipleStart(usize),
+
+    #[error("choreography has no end element")]
     NoEnd,
+
+    #[error("control flow edge is not a unique entry edge: {edge:?} appears {count} times")]
     EdgeNotUniqueEntry { edge: ControlFlow, count: usize },
+
+    #[error("control flow edge is not a unique exit edge: {edge:?} appears {count} times")]
     EdgeNotUniqueExit { edge: ControlFlow, count: usize },
+
+    #[error("unreachable terminal element at index {index}: {element:?}")]
     UnreachableTerm { index: usize, element: ChorEl },
 }
 

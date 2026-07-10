@@ -1,14 +1,19 @@
+use crate::bpmn::chor::syntax::{Chor, ChorEl};
+use crate::bpmn::edge::ControlFlow;
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::reader::Reader;
 use std::collections::{HashMap, HashSet};
+use thiserror::Error;
 
-use crate::bpmn::chor::syntax::{Chor, ChorEl};
-use crate::bpmn::edge::ControlFlow;
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ParseError {
+    #[error("XML parsing error: {0}")]
     Xml(String),
+
+    #[error("missing attribute '{attribute}' in element '{element}'")]
     MissingAttribute { element: String, attribute: String },
+
+    #[error("invalid node shape for '{id}': {reason}")]
     InvalidNodeShape { id: String, reason: String },
 }
 

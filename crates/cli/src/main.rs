@@ -1,12 +1,28 @@
-use core::bpmn::chor::parser::parse;
-use core::encoder::enc_chor::encode;
-use core::petri_net::exporter::{export_to_dot, export_to_pnml};
+mod cli;
+mod convert;
+mod server;
+use clap::Parser;
+use cli::{Cli, Command};
 
 fn main() {
-    let chor = parse(include_str!("../../../examples/chor/base.bpmn")).unwrap();
-    println!("{:?}", chor);
-    let net = encode(&chor).unwrap();
-    println!("{:?}", net);
-    export_to_pnml("output/test.pnml", &net).unwrap(); // todo: test
-    export_to_dot("output/test.dot", &net).unwrap();
+    let cli = Cli::parse();
+
+    match cli.command {
+        Command::Convert { input, pnml, dot } => {
+            match convert::convert(&input, pnml.as_deref(), dot.as_deref()) {
+                Ok(net) => println!("Conversion completed:\n\n{:?}", net),
+                Err(e) => {
+                    eprintln!("{e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        Command::Serve { port } => {
+            if let Err(e) = server::run(port) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
+    }
 }
