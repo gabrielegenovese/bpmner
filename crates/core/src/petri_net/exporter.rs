@@ -2,7 +2,7 @@ use crate::petri_net::pn::{Arc, PetriNet};
 use std::collections::HashMap;
 use std::fs::File;
 
-fn convert_to_pn_lib(mynet: &PetriNet) -> netcrab::petri_net::PetriNet {
+fn convert_to_pn_lib(mynet: &PetriNet) -> Result<netcrab::petri_net::PetriNet, String> {
     let mut new_net = netcrab::petri_net::PetriNet::new();
 
     let place_map = mynet.places.iter().fold(HashMap::new(), |mut map, p| {
@@ -17,28 +17,46 @@ fn convert_to_pn_lib(mynet: &PetriNet) -> netcrab::petri_net::PetriNet {
         map
     });
 
-    mynet.flow.iter().for_each(|a| match a {
+    mynet.flow.iter().try_for_each(|a| match a {
         Arc::PT(p, t) => {
-            new_net
-                .add_arc_place_transition(place_map.get(p).unwrap(), transition_map.get(t).unwrap())
-                .unwrap();
-        }
-        Arc::TP(t, p) => {
-            new_net
-                .add_arc_transition_place(transition_map.get(t).unwrap(), place_map.get(p).unwrap())
-                .unwrap();
-        }
-    });
+            let place_ref = place_map
+                .get(p)
+                .ok_or_else(|| "missing place reference in map".to_string())?;
+            let transition_ref = transition_map
+                .get(t)
+                .ok_or_else(|| "missing transition reference in map".to_string())?;
 
-    new_net
+            new_net
+                .add_arc_place_transition(place_ref, transition_ref)
+                .map_err(|e| e.to_string())
+        }
+        Arc::TP(p, t) => {
+            let transition_ref = transition_map
+                .get(t)
+                .ok_or_else(|| "missing transition reference in map".to_string())?;
+            let place_ref = place_map
+                .get(p)
+                .ok_or_else(|| "missing place reference in map".to_string())?;
+
+            new_net
+                .add_arc_transition_place(transition_ref, place_ref)
+                .map_err(|e| e.to_string())
+        }
+    })?;
+
+    Ok(new_net)
 }
 
-pub fn export_to_pnml(path: &str, mynet: &PetriNet) {
-    let mut buffer = File::create(path).unwrap();
-    convert_to_pn_lib(mynet).to_pnml(&mut buffer).unwrap();
+pub fn export_to_pnml(path: &str, mynet: &PetriNet) -> Result<(), String> {
+    let mut buffer = File::create(path).map_err(|e| e.to_string())?;
+    convert_to_pn_lib(mynet)?
+        .to_pnml(&mut buffer)
+        .map_err(|e| e.to_string())
 }
 
-pub fn export_to_dot(path: &str, mynet: &PetriNet) {
-    let mut buffer = File::create(path).unwrap();
-    convert_to_pn_lib(mynet).to_dot(&mut buffer).unwrap();
+pub fn export_to_dot(path: &str, mynet: &PetriNet) -> Result<(), String> {
+    let mut buffer = File::create(path).map_err(|e| e.to_string())?;
+    convert_to_pn_lib(mynet)?
+        .to_dot(&mut buffer)
+        .map_err(|e| e.to_string())
 }

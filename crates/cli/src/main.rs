@@ -19,6 +19,6 @@ fn main() {
     println!("{:?}", chor);
     let net = encode(&chor);
     println!("{:?}", net);
-    export_to_pnml("output/test.pnml", &net);
-    export_to_dot("output/test.dot", &net);
+    export_to_pnml("output/test.pnml", &net).unwrap(); // todo: test
+    export_to_dot("output/test.dot", &net).unwrap();
 }
