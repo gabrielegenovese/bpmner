@@ -1,6 +1,6 @@
 use crate::bpmn::chor::syntax::{Chor, ChorEl, edges_of};
 use crate::bpmn::edge::ControlFlow;
-use crate::encoder::preproc::preproc;
+use crate::encoder::preproc::{WellFormednessError, check_well_formed, preproc};
 use crate::encoder::util::{
     FreshIdGen, encode_dead_propagation_net, negate, powerset_non_empty, subset_transition_name,
 };
@@ -254,6 +254,9 @@ fn encode_full(
         })
 }
 
-pub fn encode(chor: &Chor) -> PetriNet {
-    encode_full(FreshIdGen::new(), chor, preproc(chor)).1
+pub fn encode(chor: &Chor) -> Result<PetriNet, Vec<WellFormednessError>> {
+    match check_well_formed(&chor) {
+        Ok(_) => Ok(encode_full(FreshIdGen::new(), chor, preproc(chor)).1),
+        Err(err) => Err(err),
+    }
 }

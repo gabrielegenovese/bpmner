@@ -30,7 +30,7 @@ fn convert_to_pn_lib(mynet: &PetriNet) -> Result<netcrab::petri_net::PetriNet, S
                 .add_arc_place_transition(place_ref, transition_ref)
                 .map_err(|e| e.to_string())
         }
-        Arc::TP(p, t) => {
+        Arc::TP(t, p) => {
             let transition_ref = transition_map
                 .get(t)
                 .ok_or_else(|| "missing transition reference in map".to_string())?;

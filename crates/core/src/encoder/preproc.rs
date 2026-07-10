@@ -1,6 +1,6 @@
 use crate::bpmn::chor::syntax::{Chor, ChorEl, edges_of};
 use crate::bpmn::edge::ControlFlow;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn entry_points(element: &ChorEl) -> HashSet<ControlFlow> {
     match element {
@@ -84,4 +84,117 @@ pub fn preproc(chor: &Chor) -> HashSet<ControlFlow> {
         .iter()
         .flat_map(|&i| preproc_contribution(&elements[i]))
         .collect()
+}
+
+/* Well-formedness conditions */
+
+#[derive(Debug, Clone)]
+pub enum WellFormednessError {
+    NoStart,
+    MultipleStart(usize),
+    NoEnd,
+    EdgeNotUniqueEntry { edge: ControlFlow, count: usize },
+    EdgeNotUniqueExit { edge: ControlFlow, count: usize },
+    UnreachableTerm { index: usize, element: ChorEl },
+}
+
+fn count_occurrences<'a>(
+    sets: impl Iterator<Item = &'a HashSet<ControlFlow>>,
+) -> HashMap<ControlFlow, usize> {
+    sets.flatten().fold(HashMap::new(), |mut acc, e| {
+        *acc.entry(e.clone()).or_insert(0) += 1;
+        acc
+    })
+}
+
+/// every edge appears exactly once as entry point and exactly once as exit point
+fn check_edge_uniqueness(elements: &[ChorEl]) -> Vec<WellFormednessError> {
+    let entry_counts =
+        count_occurrences(elements.iter().map(entry_points).collect::<Vec<_>>().iter());
+    let exit_counts =
+        count_occurrences(elements.iter().map(exit_points).collect::<Vec<_>>().iter());
+
+    let all_edges: HashSet<ControlFlow> = entry_counts
+        .keys()
+        .chain(exit_counts.keys())
+        .cloned()
+        .collect();
+
+    all_edges
+        .into_iter()
+        .flat_map(|e| {
+            let entry_err = match entry_counts.get(&e).copied().unwrap_or(0) {
+                1 => None,
+                n => Some(WellFormednessError::EdgeNotUniqueEntry {
+                    edge: e.clone(),
+                    count: n,
+                }),
+            };
+            let exit_err = match exit_counts.get(&e).copied().unwrap_or(0) {
+                1 => None,
+                n => Some(WellFormednessError::EdgeNotUniqueExit { edge: e, count: n }),
+            };
+            entry_err.into_iter().chain(exit_err)
+        })
+        .collect()
+}
+
+/// unique occurrence of start(e) and at least one occurrence of end(e)
+fn check_start_end(elements: &[ChorEl]) -> Vec<WellFormednessError> {
+    let start_count = elements
+        .iter()
+        .filter(|e| matches!(e, ChorEl::Start { .. }))
+        .count();
+    let end_count = elements
+        .iter()
+        .filter(|e| matches!(e, ChorEl::End { .. }))
+        .count();
+
+    let start_err = match start_count {
+        1 => None,
+        0 => Some(WellFormednessError::NoStart),
+        n => Some(WellFormednessError::MultipleStart(n)),
+    };
+
+    let end_err = (end_count == 0).then_some(WellFormednessError::NoEnd);
+
+    start_err.into_iter().chain(end_err).collect()
+}
+
+/// every basic term is syntactically reachable
+fn check_reachability(elements: &[ChorEl]) -> Vec<WellFormednessError> {
+    let entries: Vec<HashSet<ControlFlow>> = elements.iter().map(entry_points).collect();
+    let exits: Vec<HashSet<ControlFlow>> = elements.iter().map(exit_points).collect();
+
+    let seeds: HashSet<usize> = elements
+        .iter()
+        .enumerate()
+        .filter_map(|(i, el)| matches!(el, ChorEl::Start { .. }).then_some(i))
+        .collect();
+
+    let reachable = reachable_indices(&exits, &entries, seeds);
+
+    (0..elements.len())
+        .filter(|i| !reachable.contains(i))
+        .map(|i| WellFormednessError::UnreachableTerm {
+            index: i,
+            element: elements[i].clone(),
+        })
+        .collect()
+}
+
+pub fn check_well_formed(chor: &Chor) -> Result<(), Vec<WellFormednessError>> {
+    let elements = &chor.elements;
+
+    let errors: Vec<WellFormednessError> = check_start_end(elements)
+        .into_iter()
+        .chain(check_edge_uniqueness(elements))
+        .chain(check_reachability(elements))
+        .collect();
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
+    }
 }
