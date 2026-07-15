@@ -1,0 +1,12 @@
+[package]
+name = "nif"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "nif"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.38.0"
+wf_core = { package = "core", path = "../../../crates/core" }

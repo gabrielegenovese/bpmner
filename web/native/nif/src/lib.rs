@@ -2,7 +2,7 @@ use wf_core::bpmn::chor::parser::parse;
 use wf_core::encoder::enc_chor::encode;
 use wf_core::petri_net::exporter::{export_to_dot, export_to_pnml};
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyCpu")]
 fn convert_bpmn_to_pnml(bpmn: String) -> Result<String, rustler::Error> {
     // BPMN -> Chor
     let chor =
@@ -16,7 +16,7 @@ fn convert_bpmn_to_pnml(bpmn: String) -> Result<String, rustler::Error> {
     export_to_pnml(&net).map_err(|e| rustler::Error::Term(Box::new(format!("export error: {e}"))))
 }
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyCpu")]
 fn convert_bpmn_to_dot(bpmn: String) -> Result<String, rustler::Error> {
     // BPMN -> Chor
     let chor =
@@ -30,4 +30,4 @@ fn convert_bpmn_to_dot(bpmn: String) -> Result<String, rustler::Error> {
     export_to_dot(&net).map_err(|e| rustler::Error::Term(Box::new(format!("export error: {e}"))))
 }
 
-rustler::init!("Elixir.ConverterNif");
+rustler::init!("Elixir.Converter");
