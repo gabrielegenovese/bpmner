@@ -17,17 +17,46 @@ defmodule UiWeb.ConverterLive do
   def render(assigns) do
     ~H"""
     <div class="max-w-5xl mx-auto p-6 space-y-6">
-      <div class="toast toast-top toast-end">
-        <div :if={@toast} class="alert alert-error shadow-lg">
-          <span>{@toast}</span>
+      <div class="toast toast-bottom toast-end z-50">
+        <div
+          :if={@toast}
+          class="alert alert-error shadow-xl w-80 rounded-2xl items-start gap-3 p-4"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 shrink-0 stroke-current mt-0.5"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+
+          <div class="flex-1">
+            <p class="font-semibold text-sm">Error</p>
+            <p class="text-sm opacity-90">{@toast}</p>
+          </div>
+
+          <button
+            type="button"
+            phx-click="dismiss_toast"
+            class="btn btn-ghost btn-xs btn-circle shrink-0"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
         </div>
       </div>
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold">BPMN Chor <span class="text-primary">⇢</span> Petri Net</h1>
+        <h1 class="text-3xl font-bold">BPMN Choreography <span class="text-primary">⇢</span> Petri Net</h1>
         <div class="flex gap-2 items-center">
           <.theme_toggle />
           <.link navigate={~p"/info"} class="btn btn-ghost btn-sm">Info</.link>
-          <a href="https://github.com/" target="_blank" class="btn btn-ghost btn-sm">GitHub</a>
+          <a href="https://github.com/gabrielegenovese/bpmner" target="_blank" class="btn btn-ghost btn-sm">GitHub</a>
         </div>
       </div>
 
@@ -68,19 +97,13 @@ defmodule UiWeb.ConverterLive do
         case Converter.convert_bpmn_to_pnml(file) do
           {:error, reason} ->
             Process.send_after(self(), :clear_toast, 10000)
-
-            {:noreply,
-             socket
-             |> assign(:toast, reason)}
+            {:noreply, assign(socket, :toast, reason)}
 
           pnml ->
             case Converter.convert_bpmn_to_dot(file) do
               {:error, reason} ->
                 Process.send_after(self(), :clear_toast, 10000)
-
-                {:noreply,
-                 socket
-                 |> assign(:toast, reason)}
+                {:noreply, assign(socket, :toast, reason)}
 
               dot ->
                 {:noreply,
@@ -99,7 +122,7 @@ defmodule UiWeb.ConverterLive do
     end
   end
 
-  def handle_info(:clear_toast, socket) do
+  def handle_event("dismiss_toast", _params, socket) do
     {:noreply, assign(socket, :toast, nil)}
   end
 
@@ -118,5 +141,9 @@ defmodule UiWeb.ConverterLive do
       end
 
     {:noreply, socket}
+  end
+
+  def handle_info(:clear_toast, socket) do
+    {:noreply, assign(socket, :toast, nil)}
   end
 end
