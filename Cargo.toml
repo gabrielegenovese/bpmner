@@ -2,7 +2,7 @@
 members = [
     "crates/core",
     "crates/cli",
-    "web/native/nif",
+    "ui/native/nif",
 ]
 
 resolver = "2"

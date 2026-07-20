@@ -26,3 +26,10 @@ target
 /target
 /output
 /.vscode
+
+# Phoenix / Elixir build artifacts
+/web/_build/
+/web/deps/
+/web/.elixir_ls/
+
+# Mix build files
