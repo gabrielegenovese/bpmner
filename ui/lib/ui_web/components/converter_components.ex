@@ -313,11 +313,22 @@ defmodule UiWeb.ConverterComponents do
   attr(:label, :string, required: true)
 
   defp download_link(assigns) do
-    href = "data:text/plain;charset=utf-8;base64," <> Base.encode64(assigns.content)
+    href =
+      if is_binary(assigns.content) do
+        "data:text/plain;charset=utf-8;base64," <> Base.encode64(assigns.content)
+      else
+        "#"
+      end
+
     assigns = assign(assigns, :href, href)
 
     ~H"""
-    <a href={@href} download={@filename} class="btn btn-xs btn-outline">
+    <a
+      href={@href}
+      download={@filename}
+      class="btn btn-xs btn-outline"
+      :if={is_binary(@content)}
+    >
       {@label}
     </a>
     """
