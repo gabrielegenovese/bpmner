@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title default="Ui" suffix=" · Phoenix Framework" phx-no-format>{assigns[:page_title]}</.live_title>
+    <.live_title default="Encoder" suffix=" · BPMN Chor to Petri Net" phx-no-format>{assigns[:page_title]}</.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
@@ -34,16 +34,25 @@
             document.documentElement.setAttribute("data-theme", systemTheme());
           }
         });
+        window.__setTheme = setTheme; 
       })();
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.5.0/dist/svg-pan-zoom.min.js"></script>
+
+    <!-- <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17/dist/assets/diagram-js.css" />
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17/dist/assets/bpmn-font/css/bpmn-embedded.css" />
+    <script src="https://unpkg.com/bpmn-js@17/dist/bpmn-navigated-viewer.development.js"></script> --> 
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chor-js@latest/dist/assets/chor-js.css">
+    <script src="https://cdn.jsdelivr.net/npm/chor-js@latest/dist/chor-js-viewer.min.js"></script>
   </head>
   <body>
     {@inner_content}
+    <footer class="border-t border-base-300 mt-12 py-4 text-center text-sm text-base-content/60">
+      Built with Phoenix ·
+      <a href="https://gabrigeno.cappuccino.ovh" class="link">Gabriele Genovese</a>
+    </footer>
   </body>
-  <footer class="border-t mt-12 py-4 text-center text-sm text-gray-500">
-    Built with Phoenix · by <span class="font-medium"><a href="https://gabrigeno.cappuccino.ovh" class="link">Gabriele Genovese</a></span>
-  </footer>
 </html>
