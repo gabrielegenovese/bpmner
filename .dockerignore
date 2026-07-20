@@ -1,0 +1,11 @@
+.git
+.env
+
+ui/_build
+ui/deps
+ui/node_modules
+
+target
+output
+
+**/*.log

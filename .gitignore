@@ -33,3 +33,4 @@ target
 /web/.elixir_ls/
 
 # Mix build files
+.env

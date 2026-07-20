@@ -1,0 +1,19 @@
+services:
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: bpmn-ui
+
+    restart: unless-stopped
+
+    ports:
+      - "4000:4000"
+
+    env_file:
+      - .env
+
+    environment:
+      MIX_ENV: prod
+      PHX_SERVER: true

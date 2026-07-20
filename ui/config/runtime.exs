@@ -20,7 +20,13 @@ if System.get_env("PHX_SERVER") do
   config :ui, UiWeb.Endpoint, server: true
 end
 
-config :ui, UiWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+host = System.get_env("PHX_HOST") || "localhost"
+
+config :ui, UiWeb.Endpoint,
+  url: [host: host, port: 4000],
+  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  secret_key_base: System.fetch_env!("SECRET_KEY_BASE"),
+  server: true
 
 if config_env() == :dev do
   # Reload browser tabs when matching files change.
@@ -57,11 +63,8 @@ if config_env() == :prod do
   config :ui, UiWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
-      # Enable IPv6 and bind on all interfaces.
-      # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
-      # See the documentation on https://bandit.hexdocs.pm/Bandit.html#t:options/0
-      # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-      ip: {0, 0, 0, 0, 0, 0, 0, 0}
+      ip: {0, 0, 0, 0},
+      port: 4000
     ],
     secret_key_base: secret_key_base
 
