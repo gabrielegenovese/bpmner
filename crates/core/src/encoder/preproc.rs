@@ -1,7 +1,10 @@
 use crate::bpmn::chor::syntax::{Chor, ChorEl, edges_of};
 use crate::bpmn::edge::ControlFlow;
+use crate::encoder::util::FreshIdGen;
 use std::collections::{HashMap, HashSet};
 use thiserror::Error;
+
+/* Find the set of edges after a XOR- or OR-split */
 
 fn entry_points(element: &ChorEl) -> HashSet<ControlFlow> {
     match element {
@@ -119,7 +122,7 @@ fn count_occurrences<'a>(
     })
 }
 
-/// every edge appears exactly once as entry point and exactly once as exit point
+// every edge appears exactly once as entry point and exactly once as exit point
 fn check_edge_uniqueness(elements: &[ChorEl]) -> Vec<WellFormednessError> {
     let entry_counts =
         count_occurrences(elements.iter().map(entry_points).collect::<Vec<_>>().iter());
@@ -151,7 +154,7 @@ fn check_edge_uniqueness(elements: &[ChorEl]) -> Vec<WellFormednessError> {
         .collect()
 }
 
-/// unique occurrence of start(e) and at least one occurrence of end(e)
+// unique occurrence of start(e) and at least one occurrence of end(e)
 fn check_start_end(elements: &[ChorEl]) -> Vec<WellFormednessError> {
     let start_count = elements
         .iter()
@@ -173,7 +176,7 @@ fn check_start_end(elements: &[ChorEl]) -> Vec<WellFormednessError> {
     start_err.into_iter().chain(end_err).collect()
 }
 
-/// every basic term is syntactically reachable
+// every basic term is syntactically reachable
 fn check_reachability(elements: &[ChorEl]) -> Vec<WellFormednessError> {
     let entries: Vec<HashSet<ControlFlow>> = elements.iter().map(entry_points).collect();
     let exits: Vec<HashSet<ControlFlow>> = elements.iter().map(exit_points).collect();
@@ -198,15 +201,153 @@ fn check_reachability(elements: &[ChorEl]) -> Vec<WellFormednessError> {
 pub fn check_well_formed(chor: &Chor) -> Result<(), Vec<WellFormednessError>> {
     let elements = &chor.elements;
 
+    // println!("Checking chor {:?}", chor);
+
     let errors: Vec<WellFormednessError> = check_start_end(elements)
         .into_iter()
         .chain(check_edge_uniqueness(elements))
         .chain(check_reachability(elements))
         .collect();
 
+    // println!("Checking error {:?} ", errors);
+
     if errors.is_empty() {
         Ok(())
     } else {
         Err(errors)
     }
+}
+
+/* Canonicalization */
+
+fn is_start(element: &ChorEl) -> bool {
+    matches!(element, ChorEl::Start { .. })
+}
+
+fn visit_edge(
+    edge: &ControlFlow,
+    elements: &[ChorEl],
+    entries: &[HashSet<ControlFlow>],
+    exits: &[HashSet<ControlFlow>],
+    generator: FreshIdGen,
+    mapping: HashMap<ControlFlow, ControlFlow>,
+) -> (FreshIdGen, HashMap<ControlFlow, ControlFlow>) {
+    if mapping.contains_key(edge) {
+        return (generator, mapping);
+    }
+
+    let (generator, fresh) = generator.fresh_edge();
+
+    let mapping = mapping
+        .into_iter()
+        .chain(std::iter::once((edge.clone(), fresh)))
+        .collect();
+
+    let successors: Vec<ControlFlow> = elements
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| entries[*i].contains(edge))
+        .flat_map(|(i, _)| exits[i].iter().cloned())
+        .collect();
+
+    successors
+        .iter()
+        .fold((generator, mapping), |(generator, mapping), next_edge| {
+            visit_edge(next_edge, elements, entries, exits, generator, mapping)
+        })
+}
+
+fn build_edge_mapping(chor: &Chor) -> HashMap<ControlFlow, ControlFlow> {
+    let elements = &chor.elements;
+
+    let entries: Vec<HashSet<ControlFlow>> = elements.iter().map(entry_points).collect();
+
+    let exits: Vec<HashSet<ControlFlow>> = elements.iter().map(exit_points).collect();
+
+    let start_edges: Vec<ControlFlow> = elements
+        .iter()
+        .filter(|element| is_start(element))
+        .flat_map(exit_points)
+        .collect();
+
+    start_edges
+        .iter()
+        .fold(
+            (FreshIdGen::new(), HashMap::new()),
+            |(generator, mapping), edge| {
+                visit_edge(edge, elements, &entries, &exits, generator, mapping)
+            },
+        )
+        .1
+}
+
+fn rename(edge: &ControlFlow, mapping: &HashMap<ControlFlow, ControlFlow>) -> ControlFlow {
+    mapping.get(edge).cloned().unwrap_or_else(|| edge.clone())
+}
+
+fn rename_set(
+    edges: &HashSet<ControlFlow>,
+    mapping: &HashMap<ControlFlow, ControlFlow>,
+) -> HashSet<ControlFlow> {
+    edges.iter().map(|e| rename(e, mapping)).collect()
+}
+
+fn apply_renaming(element: &ChorEl, mapping: &HashMap<ControlFlow, ControlFlow>) -> ChorEl {
+    match element {
+        ChorEl::Start { output } => ChorEl::Start {
+            output: rename(output, mapping),
+        },
+
+        ChorEl::End { input } => ChorEl::End {
+            input: rename(input, mapping),
+        },
+
+        ChorEl::Task { input, output, .. } => ChorEl::Task {
+            input: rename(input, mapping),
+            output: rename(output, mapping),
+        },
+
+        ChorEl::AndSplit { input, output, .. } => ChorEl::AndSplit {
+            input: rename(input, mapping),
+            output: rename_set(output, mapping),
+        },
+
+        ChorEl::XorSplit { input, output, .. } => ChorEl::XorSplit {
+            input: rename(input, mapping),
+            output: rename_set(output, mapping),
+        },
+
+        ChorEl::OrSplit { input, output, .. } => ChorEl::OrSplit {
+            input: rename(input, mapping),
+            output: rename_set(output, mapping),
+        },
+
+        ChorEl::AndJoin { input, output, .. } => ChorEl::AndJoin {
+            input: rename_set(input, mapping),
+            output: rename(output, mapping),
+        },
+
+        ChorEl::XorJoin { input, output, .. } => ChorEl::XorJoin {
+            input: rename_set(input, mapping),
+            output: rename(output, mapping),
+        },
+
+        ChorEl::OrJoin { input, output, .. } => ChorEl::OrJoin {
+            input: rename_set(input, mapping),
+            output: rename(output, mapping),
+        },
+    }
+}
+
+/// Renames every edge in the choreography to a canonical `e_i` label.
+pub fn canonicalize_edges(chor: &Chor) -> Chor {
+    let mapping = build_edge_mapping(chor);
+
+    let elements = chor
+        .elements
+        .iter()
+        .map(|element| apply_renaming(element, &mapping))
+        .collect();
+
+    Chor { elements }
 }

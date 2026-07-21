@@ -30,6 +30,15 @@ impl FreshIdGen {
         };
         (next, id)
     }
+
+    pub fn fresh_edge(self) -> (Self, ControlFlow) {
+        let id = format!("e_{}", self.place_counter);
+        let next = Self {
+            place_counter: self.place_counter + 1,
+            ..self
+        };
+        (next, ControlFlow::new(id))
+    }
 }
 
 pub fn powerset_non_empty(elements: &HashSet<ControlFlow>) -> Vec<HashSet<ControlFlow>> {
