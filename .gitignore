@@ -28,9 +28,9 @@ target
 /.vscode
 
 # Phoenix / Elixir build artifacts
-/web/_build/
-/web/deps/
-/web/.elixir_ls/
+/ui/_build/
+/ui/deps/
+/ui/.elixir_ls/
 
 # Mix build files
 .env

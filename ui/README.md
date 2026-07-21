@@ -1,18 +1,18 @@
 # Ui
 
-To start your Phoenix server:
+Phoenix LiveView web interface with BPMN and Petri Net visualization that uses the Rust library.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+## Development
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+### Phoenix
 
-Ready to run in production? Please [check our deployment guides](https://phoenix.hexdocs.pm/deployment.html).
+Install dependencies:
 
-## Learn more
+```bash
+cd ui
+sudo systemctl start postgresql.service
+mix deps.get
+mix phx.server
+```
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://phoenix.hexdocs.pm/overview.html
-* Docs: https://phoenix.hexdocs.pm
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+The application will be available at: `http://localhost:4000`.
