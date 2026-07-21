@@ -340,11 +340,15 @@ fn apply_renaming(element: &ChorEl, mapping: &HashMap<ControlFlow, ControlFlow>)
 pub fn canonicalize_edges(chor: &Chor) -> Chor {
     let mapping = build_edge_mapping(chor);
 
+    // println!("Canonicalization mapping: {:?}", mapping);
+
     let elements = chor
         .elements
         .iter()
         .map(|element| apply_renaming(element, &mapping))
         .collect();
+
+    // println!("Canonicalized elements: {:?}", elements);
 
     Chor { elements }
 }

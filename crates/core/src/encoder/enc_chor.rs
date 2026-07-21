@@ -248,6 +248,7 @@ fn encode_full(
     chor: &Chor,
     preproc: HashSet<ControlFlow>,
 ) -> (FreshIdGen, PetriNet) {
+    // println!("Preprocessing edges: {:?}", preproc);
     chor.elements
         .iter()
         .fold((generator, PetriNet::new()), |(generator, net), el| {
@@ -257,8 +258,10 @@ fn encode_full(
 }
 
 pub fn encode(chor: &Chor) -> Result<PetriNet, Vec<WellFormednessError>> {
+    let can_chor = canonicalize_edges(chor);
+    let preproc_edges = preproc(&can_chor);
     match check_well_formed(&chor) {
-        Ok(_) => Ok(encode_full(FreshIdGen::new(), &canonicalize_edges(chor), preproc(chor)).1),
+        Ok(_) => Ok(encode_full(FreshIdGen::new(), &can_chor, preproc_edges).1),
         Err(err) => Err(err),
     }
 }
