@@ -8,6 +8,7 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV MIX_ENV=prod
+ENV PHX_SERVER=true
 
 WORKDIR /app
 

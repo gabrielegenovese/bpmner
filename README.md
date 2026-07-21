@@ -1,11 +1,11 @@
-# BPMN Chor -> Petri Net
+# BPMN Choreography -> Petri Net Encoder
 
-A web application and Rust library to convert **BPMN Choreography** diagrams into **Petri Nets**.
+A web application and Rust library to encode **BPMN Choreography** diagrams into **Petri Nets**.
 
 ## Features
 
 - Import BPMN Choreography (`.bpmn`)
-- Convert BPMN to Petri Nets
+- Encode BPMN to Petri Nets
 - Export as:
   - PNML (`.pnml`)
   - Graphviz DOT (`.dot`)
