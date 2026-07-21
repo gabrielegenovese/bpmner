@@ -237,7 +237,6 @@ fn visit_edge(
     }
 
     let (generator, fresh) = generator.fresh_edge();
-
     let mapping = mapping
         .into_iter()
         .chain(std::iter::once((edge.clone(), fresh)))
@@ -259,9 +258,7 @@ fn visit_edge(
 
 fn build_edge_mapping(chor: &Chor) -> HashMap<ControlFlow, ControlFlow> {
     let elements = &chor.elements;
-
     let entries: Vec<HashSet<ControlFlow>> = elements.iter().map(entry_points).collect();
-
     let exits: Vec<HashSet<ControlFlow>> = elements.iter().map(exit_points).collect();
 
     let start_edges: Vec<ControlFlow> = elements
