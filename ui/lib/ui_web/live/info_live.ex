@@ -14,7 +14,11 @@ defmodule UiWeb.InfoLive do
         <div class="flex gap-2 items-center">
           <.theme_toggle />
           <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Encoder</.link>
-          <a href="https://github.com/gabrielegenovese/bpmner" target="_blank" class="btn btn-ghost btn-sm">GitHub</a>
+          <a
+            href="https://github.com/gabrielegenovese/bpmner"
+            target="_blank"
+            class="btn btn-ghost btn-sm"
+          >GitHub</a>
         </div>
       </div>
 
@@ -52,7 +56,8 @@ defmodule UiWeb.InfoLive do
           not to activate some of its outgoing branches. To handle this, the
           encoding relies on a technique known as
           <strong>Dead Path Elimination (DPE)</strong><.ref n="2" />: alongside
-          the "live" part of the net, a parallel <em>dead propagation net</em> carries
+          the "live" part of the net, a parallel <em>dead propagation net</em>
+          carries
           tokens along the branches that were not selected. When a branch is
           skipped, a token still flows through its dead propagation counterpart,
           marking that path as resolved even though no live token ever reaches it.
@@ -80,8 +85,8 @@ defmodule UiWeb.InfoLive do
       <section class="space-y-2">
         <h2 class="text-xl font-semibold border-b pb-1">Guarantees</h2>
         <p class="text-base-content/80">
-          The encoding is proven <strong>correct</strong> and
-          <strong>complete</strong>, considering the limitation presented later,
+          The encoding is proven <strong>correct</strong>
+          and <strong>complete</strong>, considering the limitation presented later,
           with respect to a reference operational
           semantics for BPMN choreographies<.ref n="3" />: every step allowed by
           the BPMN semantics corresponds to a firing in the encoded Petri net, and
@@ -91,21 +96,27 @@ defmodule UiWeb.InfoLive do
 
       <section class="space-y-2">
         <h2 class="text-xl font-semibold border-b pb-1">Known limitations</h2>
-        These are the current structural limitations of the tool:
-        <ul class="list-disc list-inside space-y-1 text-base-content/80">
-          <li>
-            Models must be <strong>well-formed</strong>: every edge is used exactly
-            once, there is a single start event and at least one end event, and
-            every element is reachable from the start event
-          </li>
-          <li><strong>Mixed gateways</strong>, combining split and join behaviour in a single node, are not supported</li>
-          <li>
-            Models must be <strong>safe</strong>: no gateway can be activated twice
-            concurrently
-          </li>
-          <li>Only <strong>acyclic</strong> choreographies are supported, loops are not handled yet</li>
-        </ul>
-        For the first two conditions, the tool will display an error message.
+        <p class="text-base-content/80">
+          These are the current structural limitations of the tool:
+          <ul class="list-disc list-inside space-y-1 text-base-content/80">
+            <li>
+              Models must be <strong>well-formed</strong>: every edge is used exactly
+              once, there is a single start event and at least one end event, and
+              every element is reachable from the start event
+            </li>
+            <li>
+              <strong>Mixed gateways</strong>, combining split and join behaviour in a single node, are not supported
+            </li>
+            <li>
+              Models must be <strong>safe</strong>: no gateway can be activated twice
+              concurrently
+            </li>
+            <li>
+              Only <strong>acyclic</strong> choreographies are supported, loops are not handled yet
+            </li>
+          </ul>
+          For the first two conditions, the tool will display an error message.
+        </p>
       </section>
 
       <section id="references" class="space-y-2 pt-4">
@@ -119,8 +130,7 @@ defmodule UiWeb.InfoLive do
             </a>
           </li>
           <li id="ref-2">
-            M. Weidlich, A. Grosskopf, A. Barros.
-            <em>Realising dead path elimination in BPMN.</em>
+            M. Weidlich, A. Grosskopf, A. Barros. <em>Realising dead path elimination in BPMN.</em>
             IEEE Conference on Commerce and Enterprise Computing, 2009.
           </li>
           <li id="ref-3">
