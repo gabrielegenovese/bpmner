@@ -18,6 +18,7 @@ The application will be available at: `http://localhost:4000`.
 
 ## Todos
 
+- verify safety automatically using a PN tool
 - button to redirect dot using `rankdir="LR"`
 - ready examples to select
 - better info

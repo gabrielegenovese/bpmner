@@ -14,6 +14,7 @@ cargo run convert ../../examples/chor/example-chor.bpmn
 
 ## Todos
 
+- ADD INITIAL MARKING WHEN EXPORTING as an option (this helps for model checking)
 - detect collab and first give error then extend when theory is ready 
 - improve chor parsing ans errors managing
 - extend examples

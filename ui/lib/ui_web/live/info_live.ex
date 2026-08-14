@@ -98,7 +98,7 @@ defmodule UiWeb.InfoLive do
         <h2 class="text-xl font-semibold border-b pb-1">Known limitations</h2>
         <p class="text-base-content/80">
           These are the current structural limitations of the tool:
-          <ul class="list-disc list-inside space-y-1 text-base-content/80">
+          <ul class="list-disc list-inside space-y-1">
             <li>
               Models must be <strong>well-formed</strong>: every edge is used exactly
               once, there is a single start event and at least one end event, and
