@@ -8,13 +8,13 @@ defmodule UiWeb.InfoLive do
 
   def render(assigns) do
     ~H"""
-    <div class="max-w-3xl mx-auto p-6 space-y-8">
-      <div class="flex items-center justify-between">
+    <div class="mx-auto max-w-3xl space-y-8 px-5 py-8 sm:px-6">
+      <header class="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-bold">bpmner</h1>
-          <p class="text-base-content/70">Encoding Details</p>
+          <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
+          <p class="mt-1 text-sm text-base-content/60">Encoding Details</p>
         </div>
-        <div class="flex gap-2 items-center">
+        <nav class="flex items-center gap-1">
           <.theme_toggle />
           <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Encoder</.link>
           <a
@@ -22,8 +22,8 @@ defmodule UiWeb.InfoLive do
             target="_blank"
             class="btn btn-ghost btn-sm"
           >GitHub</a>
-        </div>
-      </div>
+        </nav>
+      </header>
 
       <section class="space-y-2">
         <p class="text-base-content/80">
@@ -88,15 +88,14 @@ defmodule UiWeb.InfoLive do
       <section class="space-y-2">
         <h2 class="text-xl font-semibold border-b pb-1">Initial marking and exports</h2>
         <p class="text-base-content/80">
-          The start event produces a dedicated place carrying one token in the <strong>initial marking</strong>. By default the marking is included in
-          both the PNML and DOT exports, which is what makes the net immediately
-          usable by external Petri net tools. The toggle in the encoder toolbar
-          lets you omit it when you need an unmarked skeleton.
+          The start event produces a dedicated place carrying one token in the <strong>initial marking</strong>. The marking is always included in
+          both the PNML and DOT exports, so the net is immediately usable by
+          external Petri net tools.
         </p>
         <p class="text-base-content/80">
-          The DOT graph can be laid out top-to-bottom (default) or <strong>left-to-right</strong>
-          with the corresponding toggle. Every
-          export can be downloaded from the same toolbar.
+          The DOT graph can be laid out top-to-bottom or <strong>left-to-right</strong>
+          with the layout switch in the toolbar. Both exports can be downloaded
+          from the same toolbar.
         </p>
       </section>
 

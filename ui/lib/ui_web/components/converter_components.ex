@@ -7,7 +7,6 @@ defmodule UiWeb.ConverterComponents do
   attr(:active_tab, :string, default: "graph")
   attr(:loading, :boolean, default: false)
   attr(:rankdir_lr, :boolean, default: false)
-  attr(:initial_marking, :boolean, default: true)
 
   attr(:class, :string, default: nil)
 
@@ -45,63 +44,54 @@ defmodule UiWeb.ConverterComponents do
 
   def converter(assigns) do
     ~H"""
-    <div class="border border-base-300 rounded bg-base-200 flex flex-col h-[70vh]">
+    <div class="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-base-300/80 bg-base-100 shadow-sm">
       <%= cond do %>
         <% @loading -> %>
-          <div class="flex-1 flex items-center justify-center text-base-content/50">
-            Converting...
+          <div class="flex flex-1 items-center justify-center text-sm text-base-content/40">
+            Converting…
           </div>
         <% is_nil(@dot) -> %>
-          <div class="flex-1 flex items-center justify-center text-base-content/50 text-lg">
-            The Petri Net encoding will appear here
+          <div class="flex flex-1 items-center justify-center p-8 text-center text-sm text-base-content/40">
+            Upload a BPMN choreography or load an example to see the Petri net.
           </div>
         <% true -> %>
-          <div class="flex flex-wrap items-center justify-between gap-2 px-2 pt-2">
-            <div class="flex space-x-2">
-              <.tab_button label="PN Graph" tab="graph" active_tab={@active_tab} />
-              <.tab_button label="BPMN Diagram" tab="bpmn_diagram" active_tab={@active_tab} />
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300/70 px-2 py-2">
+            <div class="inline-flex rounded-lg bg-base-200 p-0.5" role="tablist">
+              <.tab_button label="Petri net" tab="graph" active_tab={@active_tab} />
+              <.tab_button label="BPMN" tab="bpmn_diagram" active_tab={@active_tab} />
             </div>
 
-            <div class="flex items-center gap-2 pb-1">
-              <button
-                type="button"
-                phx-click="toggle_rankdir"
-                class={[
-                  "btn btn-xs",
-                  @rankdir_lr && "btn-active btn-primary",
-                  !@rankdir_lr && "btn-outline"
-                ]}
-                title="Lay the Petri net out from left to right"
+            <div class="flex flex-wrap items-center gap-2">
+              <div
+                class="inline-flex items-center rounded-lg bg-base-200 p-0.5"
+                role="group"
+                aria-label="Graph layout"
               >
-                LR layout
-              </button>
+                <.layout_button
+                  label="Vertical"
+                  layout="vertical"
+                  active={!@rankdir_lr}
+                />
+                <.layout_button
+                  label="Horizontal"
+                  layout="horizontal"
+                  active={@rankdir_lr}
+                />
+              </div>
 
-              <button
-                type="button"
-                phx-click="toggle_initial_marking"
-                class={[
-                  "btn btn-xs",
-                  @initial_marking && "btn-active",
-                  !@initial_marking && "btn-outline"
-                ]}
-                title="Include the initial marking in the exported net"
-              >
-                Initial marking
-              </button>
-
-              <span class="mx-1 h-5 w-px bg-base-300" aria-hidden="true"></span>
+              <span class="hidden h-5 w-px bg-base-300 sm:block" aria-hidden="true"></span>
 
               <.download_link :if={@dot} content={@dot} filename="output.dot" label="DOT" />
               <.download_link :if={@pnml} content={@pnml} filename="output.pnml" label="PNML" />
             </div>
           </div>
 
-          <div class="flex-1 min-h-0 border-t border-base-300 bg-base-100">
-            <div class={["w-full h-full bg-white", @active_tab != "graph" && "hidden"]}>
+          <div class="min-h-0 flex-1 bg-base-100">
+            <div class={["h-full w-full bg-white", @active_tab != "graph" && "hidden"]}>
               <.dot_graph_hook />
             </div>
 
-            <div class={["w-full h-full bg-white", @active_tab != "bpmn_diagram" && "hidden"]}>
+            <div class={["h-full w-full bg-white", @active_tab != "bpmn_diagram" && "hidden"]}>
               <.bpmn_viewer_hook />
             </div>
 
@@ -331,12 +321,36 @@ defmodule UiWeb.ConverterComponents do
     ~H"""
     <button
       type="button"
+      role="tab"
       phx-click="switch_tab"
       phx-value-tab={@tab}
+      aria-selected={to_string(@active_tab == @tab)}
       class={[
-        "px-3 py-1 rounded-t font-semibold border border-b-0",
-        @active_tab == @tab && "bg-base-100 text-primary border-base-300",
-        @active_tab != @tab && "bg-base-200 text-base-content/70 border-base-300"
+        "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+        @active_tab == @tab && "bg-base-100 text-base-content shadow-sm",
+        @active_tab != @tab && "text-base-content/60 hover:text-base-content"
+      ]}
+    >
+      {@label}
+    </button>
+    """
+  end
+
+  attr(:label, :string, required: true)
+  attr(:layout, :string, required: true)
+  attr(:active, :boolean, required: true)
+
+  defp layout_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click="set_layout"
+      phx-value-layout={@layout}
+      aria-pressed={to_string(@active)}
+      class={[
+        "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+        @active && "bg-base-100 text-base-content shadow-sm",
+        !@active && "text-base-content/60 hover:text-base-content"
       ]}
     >
       {@label}
@@ -363,7 +377,7 @@ defmodule UiWeb.ConverterComponents do
       :if={is_binary(@content)}
       href={@href}
       download={@filename}
-      class="btn btn-xs btn-outline gap-1.5"
+      class="btn btn-ghost btn-xs gap-1.5 text-base-content/60 hover:text-base-content"
     >
       <svg
         class="h-3.5 w-3.5 fill-current shrink-0"
@@ -396,10 +410,10 @@ defmodule UiWeb.ConverterComponents do
 
   def analysis_panel(assigns) do
     ~H"""
-    <div class="border border-base-300 rounded bg-base-200 p-4 space-y-3">
+    <div class="space-y-3 rounded-2xl border border-base-300/80 bg-base-100 p-4 shadow-sm">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="font-semibold">Petri net analysis</h2>
-        <span class="text-xs text-base-content/60">checked with TINA / sift</span>
+        <h2 class="text-sm font-semibold">Petri net analysis</h2>
+        <span class="text-xs text-base-content/50">TINA / sift</span>
       </div>
 
       <%= cond do %>
@@ -455,7 +469,7 @@ defmodule UiWeb.ConverterComponents do
 
   defp property_card(assigns) do
     ~H"""
-    <div class="rounded border border-base-300 bg-base-100 p-3 space-y-1">
+    <div class="space-y-1 rounded-xl border border-base-300/70 bg-base-200/30 p-3">
       <div class="flex items-center justify-between gap-2">
         <p class="text-sm font-medium">{@result["property"]}</p>
         <span class={["badge badge-sm", status_class(@result["status"])]}>

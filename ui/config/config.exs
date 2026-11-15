@@ -40,6 +40,12 @@ config :esbuild,
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
+# The Docker build compiles the Rust NIF in a dedicated layer and copies the
+# artifact into priv/native, so the Mix compilation can skip cargo entirely.
+if System.get_env("MIX_RUSTLER_SKIP_COMPILATION") == "true" do
+  config :ui, Converter, skip_compilation?: true
+end
+
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.3.0",

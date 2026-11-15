@@ -34,9 +34,8 @@ panel shows an explanatory warning.
 
 - Upload a `.bpmn` choreography or load one of the bundled examples.
 - View the BPMN diagram and the generated Petri net graph.
-- Download PNML and DOT exports.
-- Toggle the initial marking included in exports.
-- Toggle the DOT layout between top-to-bottom and left-to-right.
+- Download PNML and DOT exports, always including the initial marking.
+- Switch the DOT layout between vertical and horizontal.
 - Automatically check the encoded net with TINA's `sift`:
   - safety (`L.safe`);
   - deadlock-freedom, accepting the intended final marking.

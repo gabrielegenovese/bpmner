@@ -8,6 +8,8 @@ defmodule UiWeb.ConverterLive do
   @default_timeout 15
 
   @impl true
+  # The initial marking is always part of the exports, so it is not exposed as
+  # an option in the UI.
   def mount(_params, _session, socket) do
     {:ok,
      socket
@@ -19,7 +21,6 @@ defmodule UiWeb.ConverterLive do
      |> assign(:toast, nil)
      |> assign(:examples, Ui.Examples.all())
      |> assign(:selected_example, nil)
-     |> assign(:initial_marking, true)
      |> assign(:rankdir_lr, false)
      |> assign(:auto_analyze, true)
      |> assign(:analysis, nil)
@@ -37,7 +38,7 @@ defmodule UiWeb.ConverterLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-5xl mx-auto p-6 space-y-6">
+    <div class="mx-auto max-w-6xl space-y-5 px-5 py-8 sm:px-6">
       <div class="toast toast-bottom toast-end z-50">
         <div
           :if={@toast}
@@ -72,14 +73,15 @@ defmodule UiWeb.ConverterLive do
           </button>
         </div>
       </div>
-      <div class="flex items-center justify-between">
+
+      <header class="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-bold">bpmner</h1>
-          <p class="text-base-content/70">
+          <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
+          <p class="mt-1 text-sm text-base-content/60">
             BPMN Choreography <span class="text-primary">⇢</span> Petri Net
           </p>
         </div>
-        <div class="flex gap-2 items-center">
+        <nav class="flex items-center gap-1">
           <.theme_toggle />
           <.link navigate={~p"/info"} class="btn btn-ghost btn-sm">Info</.link>
           <a
@@ -87,65 +89,79 @@ defmodule UiWeb.ConverterLive do
             target="_blank"
             class="btn btn-ghost btn-sm"
           >GitHub</a>
-        </div>
-      </div>
+        </nav>
+      </header>
 
-      <div class="flex flex-wrap gap-3 items-center">
-        <form phx-change="select_example">
-          <select name="example" class="select select-sm select-bordered" aria-label="Load an example">
-            <option value="">Load an example…</option>
-            <option
-              :for={example <- @examples}
-              value={example.id}
-              selected={@selected_example == example.id}
+      <section class="rounded-2xl border border-base-300/80 bg-base-100 p-3 shadow-sm">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <form phx-change="select_example" class="w-full lg:w-60">
+            <select
+              name="example"
+              class="select select-sm w-full border-base-300 bg-base-200/40"
+              aria-label="Load an example"
             >
-              {example.name}
-            </option>
-          </select>
-        </form>
+              <option value="">Load an example…</option>
+              <option
+                :for={example <- @examples}
+                value={example.id}
+                selected={@selected_example == example.id}
+              >
+                {example.name}
+              </option>
+            </select>
+          </form>
 
-        <form
-          id="bpmn-form"
-          phx-submit="convert"
-          phx-change="validate"
-          class="flex flex-wrap gap-3 items-center"
-        >
-          <.live_file_input
-            upload={@uploads.bpmn}
-            class="file-input file-input-sm file-input-bordered"
-          />
-          <button type="submit" class="btn btn-primary btn-sm" phx-disable-with="Encoding...">
-            Encode
-          </button>
-          <span :for={err <- upload_errors(@uploads.bpmn)} class="badge badge-error">
-            {Phoenix.Naming.humanize(err)}
-          </span>
-        </form>
+          <div class="hidden h-6 w-px shrink-0 bg-base-300 lg:block" aria-hidden="true"></div>
 
-        <button
-          type="button"
-          phx-click="analyze"
-          class="btn btn-outline btn-sm"
-          disabled={is_nil(@bpmn_xml) or @analysis_loading}
-          title="Run TINA/sift on the encoded Petri net"
-        >
-          {if @analysis_loading, do: "Analyzing...", else: "Analyze"}
-        </button>
+          <form
+            id="bpmn-form"
+            phx-submit="convert"
+            phx-change="validate"
+            class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center"
+          >
+            <.live_file_input
+              upload={@uploads.bpmn}
+              class="file-input file-input-sm w-full text-xs sm:w-56"
+            />
+            <div class="flex items-center gap-2">
+              <button type="submit" class="btn btn-primary btn-sm" phx-disable-with="Encoding...">
+                Encode
+              </button>
+              <span :for={err <- upload_errors(@uploads.bpmn)} class="badge badge-error badge-sm">
+                {Phoenix.Naming.humanize(err)}
+              </span>
+            </div>
+          </form>
 
-        <label class="label cursor-pointer gap-2 py-0">
-          <input
-            type="checkbox"
-            class="checkbox checkbox-xs"
-            checked={@auto_analyze}
-            phx-click="toggle_auto_analyze"
-          />
-          <span class="label-text text-xs">Analyze automatically</span>
-        </label>
-      </div>
+          <div class="flex items-center justify-between gap-3 border-t border-base-300/70 pt-3 lg:ml-auto lg:border-0 lg:pt-0">
+            <label
+              class="flex cursor-pointer items-center gap-2 text-xs text-base-content/60"
+              title="Run TINA/sift automatically after encoding"
+            >
+              <input
+                type="checkbox"
+                class="toggle toggle-xs"
+                checked={@auto_analyze}
+                phx-click="toggle_auto_analyze"
+              /> Auto-analyze
+            </label>
 
-      <div :if={@selected_example} class="text-xs text-base-content/60">
-        {selected_description(@examples, @selected_example)}
-      </div>
+            <button
+              type="button"
+              phx-click="analyze"
+              class="btn btn-outline btn-sm"
+              disabled={is_nil(@bpmn_xml) or @analysis_loading}
+              title="Run TINA/sift on the encoded Petri net"
+            >
+              {if @analysis_loading, do: "Analyzing…", else: "Analyze"}
+            </button>
+          </div>
+        </div>
+
+        <p :if={@selected_example} class="mt-2 px-1 text-xs text-base-content/50">
+          {selected_description(@examples, @selected_example)}
+        </p>
+      </section>
 
       <.converter
         bpmn_xml={@bpmn_xml}
@@ -154,7 +170,6 @@ defmodule UiWeb.ConverterLive do
         active_tab={@active_tab}
         loading={@loading}
         rankdir_lr={@rankdir_lr}
-        initial_marking={@initial_marking}
       />
 
       <.analysis_panel
@@ -215,35 +230,30 @@ defmodule UiWeb.ConverterLive do
     {:noreply, assign(socket, :auto_analyze, !socket.assigns.auto_analyze)}
   end
 
-  def handle_event("toggle_rankdir", _params, socket) do
-    rankdir = !socket.assigns.rankdir_lr
-    socket = assign(socket, :rankdir_lr, rankdir)
+  def handle_event("set_layout", %{"layout" => layout}, socket) do
+    rankdir = layout == "horizontal"
 
-    case socket.assigns.bpmn_xml do
-      nil ->
-        {:noreply, socket}
+    if rankdir == socket.assigns.rankdir_lr do
+      {:noreply, socket}
+    else
+      socket = assign(socket, :rankdir_lr, rankdir)
 
-      xml ->
-        case Converter.convert_bpmn_to_dot(xml, socket.assigns.initial_marking, rankdir) do
-          {:ok, dot} ->
-            {:noreply,
-             socket
-             |> assign(:dot, dot)
-             |> push_event("render_dot", %{dot: dot})}
+      case socket.assigns.bpmn_xml do
+        nil ->
+          {:noreply, socket}
 
-          {:error, reason} ->
-            {:noreply, put_toast(socket, reason)}
-        end
-    end
-  end
+        xml ->
+          case Converter.convert_bpmn_to_dot(xml, true, rankdir) do
+            {:ok, dot} ->
+              {:noreply,
+               socket
+               |> assign(:dot, dot)
+               |> push_event("render_dot", %{dot: dot})}
 
-  def handle_event("toggle_initial_marking", _params, socket) do
-    marking = !socket.assigns.initial_marking
-    socket = assign(socket, :initial_marking, marking)
-
-    case socket.assigns.bpmn_xml do
-      nil -> {:noreply, socket}
-      xml -> {:noreply, reencode(socket, xml)}
+            {:error, reason} ->
+              {:noreply, put_toast(socket, reason)}
+          end
+      end
     end
   end
 
@@ -305,14 +315,9 @@ defmodule UiWeb.ConverterLive do
         analysis_error: nil
       )
 
-    with {:ok, pnml} <-
-           Converter.convert_bpmn_to_pnml(xml, socket.assigns.initial_marking),
+    with {:ok, pnml} <- Converter.convert_bpmn_to_pnml(xml, true),
          {:ok, dot} <-
-           Converter.convert_bpmn_to_dot(
-             xml,
-             socket.assigns.initial_marking,
-             socket.assigns.rankdir_lr
-           ) do
+           Converter.convert_bpmn_to_dot(xml, true, socket.assigns.rankdir_lr) do
       duration = System.monotonic_time(:millisecond) - started
 
       Logger.info(
@@ -338,32 +343,6 @@ defmodule UiWeb.ConverterLive do
         socket
         |> assign(loading: false)
         |> put_toast(reason)
-    end
-  end
-
-  # Re-export without resetting the analysis until the new export is ready.
-  defp reencode(socket, xml) do
-    started = System.monotonic_time(:millisecond)
-
-    with {:ok, pnml} <-
-           Converter.convert_bpmn_to_pnml(xml, socket.assigns.initial_marking),
-         {:ok, dot} <-
-           Converter.convert_bpmn_to_dot(
-             xml,
-             socket.assigns.initial_marking,
-             socket.assigns.rankdir_lr
-           ) do
-      duration = System.monotonic_time(:millisecond) - started
-
-      Logger.info("re-encoded net in #{duration}ms")
-
-      socket
-      |> assign(pnml: pnml, dot: dot)
-      |> push_event("render_dot", %{dot: dot})
-      |> maybe_auto_analyze()
-    else
-      {:error, reason} ->
-        put_toast(socket, reason)
     end
   end
 
