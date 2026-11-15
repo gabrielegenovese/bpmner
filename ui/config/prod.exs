@@ -7,17 +7,23 @@ import Config
 # before starting your production server.
 config :ui, UiWeb.Endpoint, cache_static_manifest: "priv/static/cache_manifest.json"
 
-# Force using SSL in production. This also sets the "strict-security-transport" header,
-# known as HSTS. If you have a health check endpoint, you may want to exclude it below.
-# Note `:force_ssl` is required to be set at compile-time.
-config :ui, UiWeb.Endpoint,
-  force_ssl: [
-    rewrite_on: [:x_forwarded_proto],
-    exclude: [
-      # paths: ["/health"],
-      hosts: ["localhost", "127.0.0.1"]
+# `force_ssl` is compile-time in Phoenix. It is enabled only when explicitly
+# requested at build time, because the default deployment serves plain HTTP on
+# port 4000. Enable it when a reverse proxy terminates TLS for this container:
+#
+#   docker compose build --build-arg FORCE_SSL=true
+#
+# and set PHX_SCHEME=https (usually PHX_URL_PORT=443) at runtime.
+if System.get_env("FORCE_SSL") in ["1", "true", "TRUE", "yes", "YES", "on", "ON"] do
+  config :ui, UiWeb.Endpoint,
+    force_ssl: [
+      rewrite_on: [:x_forwarded_proto],
+      exclude: [
+        # paths: ["/health"],
+        hosts: ["localhost", "127.0.0.1"]
+      ]
     ]
-  ]
+end
 
 # Do not print debug messages in production
 config :logger, level: :info

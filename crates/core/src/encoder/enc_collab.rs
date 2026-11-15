@@ -12,8 +12,9 @@ fn encode_start(generator: FreshIdGen, output: &ControlFlow) -> (FreshIdGen, Pet
     let (generator, p_s) = generator.fresh_place("start");
     let (generator, t) = generator.fresh_transition("start");
     let net = PetriNet::new()
-        .arc_pt(p_s, t.clone())
-        .arc_tp(t, output.id());
+        .arc_pt(p_s.clone(), t.clone())
+        .arc_tp(t, output.id())
+        .mark(p_s, 1);
     (generator, net)
 }
 

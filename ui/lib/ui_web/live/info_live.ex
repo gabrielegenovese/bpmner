@@ -10,7 +10,10 @@ defmodule UiWeb.InfoLive do
     ~H"""
     <div class="max-w-3xl mx-auto p-6 space-y-8">
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold">Encoding Details</h1>
+        <div>
+          <h1 class="text-3xl font-bold">bpmner</h1>
+          <p class="text-base-content/70">Encoding Details</p>
+        </div>
         <div class="flex gap-2 items-center">
           <.theme_toggle />
           <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Encoder</.link>
@@ -83,6 +86,64 @@ defmodule UiWeb.InfoLive do
       </section>
 
       <section class="space-y-2">
+        <h2 class="text-xl font-semibold border-b pb-1">Initial marking and exports</h2>
+        <p class="text-base-content/80">
+          The start event produces a dedicated place carrying one token in the <strong>initial marking</strong>. By default the marking is included in
+          both the PNML and DOT exports, which is what makes the net immediately
+          usable by external Petri net tools. The toggle in the encoder toolbar
+          lets you omit it when you need an unmarked skeleton.
+        </p>
+        <p class="text-base-content/80">
+          The DOT graph can be laid out top-to-bottom (default) or <strong>left-to-right</strong>
+          with the corresponding toggle. Every
+          export can be downloaded from the same toolbar.
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-xl font-semibold border-b pb-1">Automatic analysis with TINA</h2>
+        <p class="text-base-content/80">
+          After encoding, the net is checked with <a
+            href="https://projects.laas.fr/tina/"
+            target="_blank"
+            class="link link-primary"
+          >
+            TINA
+          </a>'s <code>sift</code>
+          state-space explorer:
+        </p>
+        <ul class="list-disc list-inside space-y-1 text-base-content/80">
+          <li>
+            <strong>Safety</strong>: no place ever carries more than one token
+            (<code>L.safe</code>);
+          </li>
+          <li>
+            <strong>Deadlock-freedom</strong>: every deadlock is the intended final
+            marking, in which all places are empty.
+          </li>
+        </ul>
+        <p class="text-base-content/80">
+          Results show the number of explored markings and, when a property is
+          violated, a witness state. The raw analyzer log is available in the
+          collapsible panel, and each run is also written to the application log.
+          The analysis needs the <code>sift</code>
+          binary on <code>PATH</code>: set <code>SIFT_PATH</code>
+          to point at it otherwise. You can bound the
+          exploration with <code>SIFT_MAX_STATES</code>
+          and <code>SIFT_TIMEOUT</code>.
+        </p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="text-xl font-semibold border-b pb-1">Bundled examples</h2>
+        <p class="text-base-content/80">
+          The example selector loads a few ready-made models: the pizzeria
+          choreography with AND gateways and the paper example with XOR/OR
+          gateways.
+        </p>
+      </section>
+
+      <section class="space-y-2">
         <h2 class="text-xl font-semibold border-b pb-1">Guarantees</h2>
         <p class="text-base-content/80">
           The encoding is proven <strong>correct</strong>
@@ -97,7 +158,7 @@ defmodule UiWeb.InfoLive do
       <section class="space-y-2">
         <h2 class="text-xl font-semibold border-b pb-1">Known limitations</h2>
         <p class="text-base-content/80">
-          These are the current structural limitations of the tool:
+          These are the current limitations of the tool:
           <ul class="list-disc list-inside space-y-1">
             <li>
               Models must be <strong>well-formed</strong>: every edge is used exactly
@@ -105,17 +166,26 @@ defmodule UiWeb.InfoLive do
               every element is reachable from the start event
             </li>
             <li>
+              Only <strong>choreographies</strong> are accepted: BPMN collaborations,
+              processes, sub-choreographies and event-based gateways are rejected
+              with a dedicated error message
+            </li>
+            <li>
               <strong>Mixed gateways</strong>, combining split and join behaviour in a single node, are not supported
             </li>
             <li>
               Models must be <strong>safe</strong>: no gateway can be activated twice
-              concurrently
+              concurrently; the integrated analysis reports a violation when this
+              happens, and a <code>not_</code> place exceeding one token is the
+              usual symptom
             </li>
             <li>
               Only <strong>acyclic</strong> choreographies are supported, loops are not handled yet
             </li>
           </ul>
-          For the first two conditions, the tool will display an error message.
+          Structural problems (well-formedness, loops, unsupported elements,
+          collaborations) are reported in the encoder before any Petri net is
+          produced.
         </p>
       </section>
 

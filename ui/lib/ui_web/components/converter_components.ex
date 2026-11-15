@@ -6,6 +6,8 @@ defmodule UiWeb.ConverterComponents do
   attr(:dot, :string, default: nil)
   attr(:active_tab, :string, default: "graph")
   attr(:loading, :boolean, default: false)
+  attr(:rankdir_lr, :boolean, default: false)
+  attr(:initial_marking, :boolean, default: true)
 
   attr(:class, :string, default: nil)
 
@@ -17,7 +19,11 @@ defmodule UiWeb.ConverterComponents do
       title="Toggle theme"
       onclick="window.__setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')"
     >
-      <svg class="h-5 w-5 fill-none stroke-current block dark:hidden" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        class="h-5 w-5 fill-none stroke-current block dark:hidden"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <path
           d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5001M17.6859 17.69L18.5 18.5001M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"
           stroke-width="2"
@@ -26,7 +32,11 @@ defmodule UiWeb.ConverterComponents do
         />
       </svg>
 
-      <svg class="h-4 w-4 fill-current hidden dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <svg
+        class="h-4 w-4 fill-current hidden dark:block"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
         <path d="M21.64 13a1 1 0 00-1.05-.14 8.05 8.05 0 01-3.37.73 8.15 8.15 0 01-8.14-8.1 8.59 8.59 0 01.25-2A1 1 0 008 2.36a10.14 10.14 0 1014 11.69 1 1 0 00-.36-1.05z" />
       </svg>
     </button>
@@ -41,20 +51,46 @@ defmodule UiWeb.ConverterComponents do
           <div class="flex-1 flex items-center justify-center text-base-content/50">
             Converting...
           </div>
-
         <% is_nil(@dot) -> %>
           <div class="flex-1 flex items-center justify-center text-base-content/50 text-lg">
             The Petri Net encoding will appear here
           </div>
-
         <% true -> %>
-          <div class="flex items-center justify-between px-2 pt-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 px-2 pt-2">
             <div class="flex space-x-2">
               <.tab_button label="PN Graph" tab="graph" active_tab={@active_tab} />
               <.tab_button label="BPMN Diagram" tab="bpmn_diagram" active_tab={@active_tab} />
             </div>
 
-            <div class="flex space-x-2 pb-1">
+            <div class="flex items-center gap-2 pb-1">
+              <button
+                type="button"
+                phx-click="toggle_rankdir"
+                class={[
+                  "btn btn-xs",
+                  @rankdir_lr && "btn-active btn-primary",
+                  !@rankdir_lr && "btn-outline"
+                ]}
+                title="Lay the Petri net out from left to right"
+              >
+                LR layout
+              </button>
+
+              <button
+                type="button"
+                phx-click="toggle_initial_marking"
+                class={[
+                  "btn btn-xs",
+                  @initial_marking && "btn-active",
+                  !@initial_marking && "btn-outline"
+                ]}
+                title="Include the initial marking in the exported net"
+              >
+                Initial marking
+              </button>
+
+              <span class="mx-1 h-5 w-px bg-base-300" aria-hidden="true"></span>
+
               <.download_link :if={@dot} content={@dot} filename="output.dot" label="DOT" />
               <.download_link :if={@pnml} content={@pnml} filename="output.pnml" label="PNML" />
             </div>
@@ -78,7 +114,8 @@ defmodule UiWeb.ConverterComponents do
 
   defp bpmn_viewer_hook(assigns) do
     ~H"""
-    <div id="bpmn-viewer" phx-hook=".BpmnViewer" phx-update="ignore" class="relative w-full h-full"></div>
+    <div id="bpmn-viewer" phx-hook=".BpmnViewer" phx-update="ignore" class="relative w-full h-full">
+    </div>
 
     <style>
       #bpmn-viewer { touch-action:none; user-select:none; cursor:grab; }
@@ -180,109 +217,108 @@ defmodule UiWeb.ConverterComponents do
 
   defp dot_graph_hook(assigns) do
     ~H"""
-    <div id="dot-graph" phx-hook=".DotGraph" phx-update="ignore" class="relative w-full h-full">
-    </div>
+    <div id="dot-graph" phx-hook=".DotGraph" phx-update="ignore" class="relative w-full h-full"></div>
 
     <script :type={Phoenix.LiveView.ColocatedHook} name=".DotGraph">
-      export default {
-      mounted() {
-        this.viz = new Viz();
-        this.panZoom = null;
+        export default {
+        mounted() {
+          this.viz = new Viz();
+          this.panZoom = null;
 
-        this.resizeObserver = new ResizeObserver(() => {
-          const svg = this.el.querySelector("svg");
-          if (svg) this.sizeSvg(svg);
-        });
-        this.resizeObserver.observe(this.el);
-
-        this.handleEvent("render_dot", ({ dot }) => this.renderDot(dot));
-
-        this.handleEvent("resize_dot", () => {
-          requestAnimationFrame(() => {
+          this.resizeObserver = new ResizeObserver(() => {
             const svg = this.el.querySelector("svg");
             if (svg) this.sizeSvg(svg);
           });
-        });
-      },
+          this.resizeObserver.observe(this.el);
 
-      destroyed() {
-        if (this.resizeObserver) this.resizeObserver.disconnect();
-        this.safeDestroyPanZoom();
-      },
+          this.handleEvent("render_dot", ({ dot }) => this.renderDot(dot));
 
-      safeDestroyPanZoom() {
-        if (this.panZoom) {
-          try {
-            this.panZoom.destroy();
-          } catch (_e) {
-            // panZoom might already be in a broken/detached state, ignore
+          this.handleEvent("resize_dot", () => {
+            requestAnimationFrame(() => {
+              const svg = this.el.querySelector("svg");
+              if (svg) this.sizeSvg(svg);
+            });
+          });
+        },
+
+        destroyed() {
+          if (this.resizeObserver) this.resizeObserver.disconnect();
+          this.safeDestroyPanZoom();
+        },
+
+        safeDestroyPanZoom() {
+          if (this.panZoom) {
+            try {
+              this.panZoom.destroy();
+            } catch (_e) {
+              // panZoom might already be in a broken/detached state, ignore
+            }
+            this.panZoom = null;
           }
-          this.panZoom = null;
-        }
-      },
+        },
 
-      forceSize(svg) {
-        const { width, height } = this.el.getBoundingClientRect();
-        if (width === 0 || height === 0) return;
+        forceSize(svg) {
+          const { width, height } = this.el.getBoundingClientRect();
+          if (width === 0 || height === 0) return;
 
-        svg.setAttribute("width", width);
-        svg.setAttribute("height", height);
-        svg.style.width = width + "px";
-        svg.style.height = height + "px";
-      },
+          svg.setAttribute("width", width);
+          svg.setAttribute("height", height);
+          svg.style.width = width + "px";
+          svg.style.height = height + "px";
+        },
 
-      sizeSvg(svg) {
-        const { width, height } = this.el.getBoundingClientRect();
-        if (width === 0 || height === 0) return;
+        sizeSvg(svg) {
+          const { width, height } = this.el.getBoundingClientRect();
+          if (width === 0 || height === 0) return;
 
-        svg.style.position = "absolute";
-        svg.style.top = "0";
-        svg.style.left = "0";
-        svg.setAttribute("width", width);
-        svg.setAttribute("height", height);
-        svg.style.width = width + "px";
-        svg.style.height = height + "px";
-
-        if (this.panZoom) {
-          this.panZoom.resize();
-          this.panZoom.fit();
-          this.panZoom.center();
-        }
-      },
-
-      async renderDot(dot) {
-        if (!dot) return;
-
-        try {
-          const svgMarkup = await this.viz.renderString(dot);
-          this.el.innerHTML = svgMarkup;
-
-          const svg = this.el.querySelector("svg");
           svg.style.position = "absolute";
           svg.style.top = "0";
           svg.style.left = "0";
+          svg.setAttribute("width", width);
+          svg.setAttribute("height", height);
+          svg.style.width = width + "px";
+          svg.style.height = height + "px";
 
-          this.forceSize(svg);
-          await new Promise(requestAnimationFrame);
+          if (this.panZoom) {
+            this.panZoom.resize();
+            this.panZoom.fit();
+            this.panZoom.center();
+          }
+        },
 
-          this.safeDestroyPanZoom();
+        async renderDot(dot) {
+          if (!dot) return;
 
-          this.panZoom = svgPanZoom(svg, {
-            zoomEnabled: true,
-            controlIconsEnabled: true,
-            minZoom: 0.1,
-            fit: true,
-            center: true
-          });
+          try {
+            const svgMarkup = await this.viz.renderString(dot);
+            this.el.innerHTML = svgMarkup;
 
-          this.forceSize(svg);
-        } catch (err) {
-          this.el.innerHTML = "<p class='text-error p-3'>Cannot render DOT graph</p>";
-          console.error(err);
-          this.viz = new Viz();
+            const svg = this.el.querySelector("svg");
+            svg.style.position = "absolute";
+            svg.style.top = "0";
+            svg.style.left = "0";
+
+            this.forceSize(svg);
+            await new Promise(requestAnimationFrame);
+
+            this.safeDestroyPanZoom();
+
+            this.panZoom = svgPanZoom(svg, {
+              zoomEnabled: true,
+              controlIconsEnabled: true,
+              minZoom: 0.1,
+              fit: true,
+              center: true
+            });
+
+            this.forceSize(svg);
+          } catch (err) {
+            this.el.innerHTML = "<p class='text-error p-3'>Cannot render DOT graph</p>";
+            console.error(err);
+            this.viz = new Viz();
+          }
         }
       }
-    }
     </script>
     """
   end
@@ -324,10 +360,10 @@ defmodule UiWeb.ConverterComponents do
 
     ~H"""
     <a
+      :if={is_binary(@content)}
       href={@href}
       download={@filename}
       class="btn btn-xs btn-outline gap-1.5"
-      :if={is_binary(@content)}
     >
       <svg
         class="h-3.5 w-3.5 fill-current shrink-0"
@@ -346,7 +382,106 @@ defmodule UiWeb.ConverterComponents do
 
   defp source_pane(assigns) do
     ~H"""
-    <pre id={"src-" <> @id} class="h-full w-full overflow-auto p-3 text-sm font-mono whitespace-pre-wrap bg-base-100 text-base-content"><code>{@content}</code></pre>
+    <pre
+      id={"src-" <> @id}
+      class="h-full w-full overflow-auto p-3 text-sm font-mono whitespace-pre-wrap bg-base-100 text-base-content"
+    ><code>{@content}</code></pre>
     """
+  end
+
+  attr(:analysis, :map, default: nil)
+  attr(:loading, :boolean, default: false)
+  attr(:error, :string, default: nil)
+  attr(:sift_path, :string, default: "sift")
+
+  def analysis_panel(assigns) do
+    ~H"""
+    <div class="border border-base-300 rounded bg-base-200 p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="font-semibold">Petri net analysis</h2>
+        <span class="text-xs text-base-content/60">checked with TINA / sift</span>
+      </div>
+
+      <%= cond do %>
+        <% @loading -> %>
+          <p class="text-sm text-base-content/60 flex items-center gap-2">
+            <span class="loading loading-spinner loading-xs"></span> Exploring the state space…
+          </p>
+        <% @error -> %>
+          <div class="alert alert-warning items-start gap-3 py-2">
+            <div class="flex-1 text-sm">
+              <p class="font-semibold">Analyzer unavailable</p>
+              <p class="opacity-90">{@error}</p>
+              <p class="mt-1 text-xs opacity-75">
+                Install TINA (projects.laas.fr/tina) and make sure the <code class="mx-1">sift</code>
+                binary is on <code>PATH</code>, or set <code>SIFT_PATH</code>
+                (currently: <code>{@sift_path}</code>).
+              </p>
+            </div>
+          </div>
+        <% is_nil(@analysis) -> %>
+          <p class="text-sm text-base-content/60">
+            Safety and deadlock-freedom are checked automatically after encoding.
+          </p>
+        <% @analysis["tool_error"] -> %>
+          <div class="alert alert-warning items-start gap-3 py-2">
+            <div class="flex-1 text-sm">
+              <p class="font-semibold">Analyzer unavailable</p>
+              <p class="opacity-90">{@analysis["error"]}</p>
+            </div>
+          </div>
+        <% true -> %>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <.property_card result={@analysis["safety"]} />
+            <.property_card result={@analysis["deadlock"]} />
+          </div>
+
+          <p class="text-xs text-base-content/60">
+            {@analysis["places"]} places, {@analysis["transitions"]} transitions.
+            Safety means no place ever carries more than one token; deadlock-freedom
+            allows the intended final marking, where all places are empty.
+          </p>
+
+          <details class="text-xs">
+            <summary class="cursor-pointer text-base-content/60">Analyzer log</summary>
+            <pre class="mt-2 max-h-56 overflow-auto rounded bg-base-100 p-2 text-[11px] whitespace-pre-wrap">{analysis_log(@analysis)}</pre>
+          </details>
+      <% end %>
+    </div>
+    """
+  end
+
+  attr(:result, :map, required: true)
+
+  defp property_card(assigns) do
+    ~H"""
+    <div class="rounded border border-base-300 bg-base-100 p-3 space-y-1">
+      <div class="flex items-center justify-between gap-2">
+        <p class="text-sm font-medium">{@result["property"]}</p>
+        <span class={["badge badge-sm", status_class(@result["status"])]}>
+          {@result["status"]}
+        </span>
+      </div>
+
+      <p :if={@result["violation"]} class="text-xs text-error">
+        violating state: <code>{@result["violation"]}</code>
+      </p>
+
+      <p :if={@result["states"]} class="text-xs text-base-content/60">
+        {@result["states"]} markings explored
+      </p>
+    </div>
+    """
+  end
+
+  defp status_class("holds"), do: "badge-success"
+  defp status_class("violated"), do: "badge-error"
+  defp status_class(_), do: "badge-warning"
+
+  defp analysis_log(analysis) do
+    [analysis["safety"], analysis["deadlock"]]
+    |> Enum.map(&(&1 && &1["log"]))
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join("\n\n")
   end
 end

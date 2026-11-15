@@ -4,8 +4,12 @@
 ui/_build
 ui/deps
 ui/node_modules
+ui/target
+ui/.elixir_ls
+ui/priv/native/*.so
 
 target
 output
 
 **/*.log
+**/.DS_Store

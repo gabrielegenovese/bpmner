@@ -27,8 +27,12 @@ config :phoenix_live_view,
   root_tag_attribute: "phx-r"
 
 # Configure esbuild (the version is required)
+#
+# `MIX_ESBUILD_PATH` points at a pre-installed executable, which is how the
+# Docker image avoids downloading from the npm registry at build time.
 config :esbuild,
   version: "0.25.4",
+  path: System.get_env("MIX_ESBUILD_PATH"),
   ui: [
     args:
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),

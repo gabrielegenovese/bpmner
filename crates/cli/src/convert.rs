@@ -1,9 +1,12 @@
 use std::fs;
 use thiserror::Error;
+use wf_core::analysis::{AnalysisError, AnalysisOptions, AnalysisReport, analyze};
 use wf_core::bpmn::chor::parser::{ParseError, parse};
 use wf_core::encoder::enc_chor::encode;
 use wf_core::encoder::preproc::WellFormednessError;
-use wf_core::petri_net::exporter::{ExportError, export_to_dot, export_to_pnml};
+use wf_core::petri_net::exporter::{
+    ExportError, ExportOptions, export_to_dot_with_options, export_to_pnml_with_options,
+};
 use wf_core::petri_net::pn::PetriNet;
 
 #[derive(Debug, Error)]
@@ -16,6 +19,9 @@ pub enum ConvertError {
 
     #[error("Export failed: {0}")]
     Export(#[from] ExportError),
+
+    #[error("Petri net analysis failed: {0}")]
+    Analysis(#[from] AnalysisError),
 
     #[error("failed to read input file '{path}': {source}")]
     InputFile {
@@ -63,6 +69,7 @@ pub fn convert_file(
     input: &str,
     output_pnml: Option<&str>,
     output_dot: Option<&str>,
+    options: ExportOptions,
 ) -> Result<PetriNet, ConvertError> {
     let xml = fs::read_to_string(input).map_err(|e| ConvertError::InputFile {
         path: input.to_string(),
@@ -72,12 +79,12 @@ pub fn convert_file(
     let net = xml_to_net(&xml)?;
 
     if let Some(path) = output_pnml {
-        write_output(path, &export_to_pnml(&net)?)?;
+        write_output(path, &export_to_pnml_with_options(&net, options)?)?;
         println!("Exported PNML to {path}");
     }
 
     if let Some(path) = output_dot {
-        write_output(path, &export_to_dot(&net)?)?;
+        write_output(path, &export_to_dot_with_options(&net, options)?)?;
         println!("Exported DOT to {path}");
     }
 
@@ -86,4 +93,15 @@ pub fn convert_file(
     }
 
     Ok(net)
+}
+
+pub fn check_file(input: &str, options: AnalysisOptions) -> Result<AnalysisReport, ConvertError> {
+    let xml = fs::read_to_string(input).map_err(|e| ConvertError::InputFile {
+        path: input.to_string(),
+        source: e,
+    })?;
+
+    let net = xml_to_net(&xml)?;
+
+    Ok(analyze(&net, &options)?)
 }

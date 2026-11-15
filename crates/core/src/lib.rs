@@ -21,3 +21,5 @@ pub mod encoder {
     pub mod preproc;
     pub mod util;
 }
+
+pub mod analysis;

@@ -103,14 +103,19 @@ pub enum WellFormednessError {
     #[error("choreography has no end element")]
     NoEnd,
 
-    #[error("control flow edge is not a unique entry edge: {edge:?} appears {count} times")]
+    #[error("control flow edge '{edge}' is not a unique entry edge: it appears {count} times")]
     EdgeNotUniqueEntry { edge: ControlFlow, count: usize },
 
-    #[error("control flow edge is not a unique exit edge: {edge:?} appears {count} times")]
+    #[error("control flow edge '{edge}' is not a unique exit edge: it appears {count} times")]
     EdgeNotUniqueExit { edge: ControlFlow, count: usize },
 
-    #[error("unreachable terminal element at index {index}: {element:?}")]
+    #[error("unreachable element at index {index}: {element:?}")]
     UnreachableTerm { index: usize, element: ChorEl },
+
+    #[error(
+        "the choreography contains a cycle (loops are not supported yet), involving the element at index {index}: {element:?}"
+    )]
+    Cyclic { index: usize, element: ChorEl },
 }
 
 fn count_occurrences<'a>(
@@ -198,18 +203,63 @@ fn check_reachability(elements: &[ChorEl]) -> Vec<WellFormednessError> {
         .collect()
 }
 
+fn find_cycle(
+    element: usize,
+    entries: &[HashSet<ControlFlow>],
+    exits: &[HashSet<ControlFlow>],
+    color: &mut [u8],
+) -> Option<usize> {
+    color[element] = 1;
+
+    for successor in 0..entries.len() {
+        if exits[element].is_disjoint(&entries[successor]) {
+            continue;
+        }
+
+        if color[successor] == 1 {
+            return Some(successor);
+        }
+
+        if color[successor] == 0
+            && let Some(cycle) = find_cycle(successor, entries, exits, color)
+        {
+            return Some(cycle);
+        }
+    }
+
+    color[element] = 2;
+    None
+}
+
+// Loops are not supported by the encoding yet, so detect them explicitly.
+fn check_acyclic(elements: &[ChorEl]) -> Vec<WellFormednessError> {
+    let entries: Vec<HashSet<ControlFlow>> = elements.iter().map(entry_points).collect();
+    let exits: Vec<HashSet<ControlFlow>> = elements.iter().map(exit_points).collect();
+    let mut color = vec![0_u8; elements.len()];
+
+    for index in 0..elements.len() {
+        if color[index] == 0
+            && let Some(cycle) = find_cycle(index, &entries, &exits, &mut color)
+        {
+            return vec![WellFormednessError::Cyclic {
+                index: cycle,
+                element: elements[cycle].clone(),
+            }];
+        }
+    }
+
+    Vec::new()
+}
+
 pub fn check_well_formed(chor: &Chor) -> Result<(), Vec<WellFormednessError>> {
     let elements = &chor.elements;
-
-    // println!("Checking chor {:?}", chor);
 
     let errors: Vec<WellFormednessError> = check_start_end(elements)
         .into_iter()
         .chain(check_edge_uniqueness(elements))
         .chain(check_reachability(elements))
+        .chain(check_acyclic(elements))
         .collect();
-
-    // println!("Checking error {:?} ", errors);
 
     if errors.is_empty() {
         Ok(())
