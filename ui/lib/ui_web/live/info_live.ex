@@ -1,6 +1,6 @@
 defmodule UiWeb.InfoLive do
   use UiWeb, :live_view
-  import UiWeb.ConverterComponents, only: [theme_toggle: 1]
+  import UiWeb.ConverterComponents, only: [theme_toggle: 1, github_link: 1]
 
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -17,11 +17,7 @@ defmodule UiWeb.InfoLive do
         <nav class="flex items-center gap-1">
           <.theme_toggle />
           <.link navigate={~p"/"} class="btn btn-ghost btn-sm">Encoder</.link>
-          <a
-            href="https://github.com/gabrielegenovese/bpmner"
-            target="_blank"
-            class="btn btn-ghost btn-sm"
-          >GitHub</a>
+          <.github_link />
         </nav>
       </header>
 
@@ -196,8 +192,8 @@ defmodule UiWeb.InfoLive do
             G. Genovese, C. Di Giusto, I. Lanese, E. Tuosto.
             <em>A Petri Net Semantics for Acyclic Safe BPMN Choreography.</em>
             ICTAC 2026.
-            <a href="https://hal.science/hal-05665560" target="_blank" class="link link-primary">
-              hal.science/hal-05665560
+            <a href="https://hal.science/hal-05665560v6" target="_blank" class="link link-primary">
+              hal.science/hal-05665560v6
             </a>
           </li>
           <li id="ref-2">

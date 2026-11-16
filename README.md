@@ -6,7 +6,7 @@ A Rust library, command-line tool and Phoenix LiveView web application that
 encode **BPMN Choreography** diagrams into **Petri Nets**.
 
 The translation follows the encoding presented in
-[*A Petri Net Semantics for Acyclic Safe BPMN Choreography*](https://hal.science/hal-05665560),
+[*A Petri Net Semantics for Acyclic Safe BPMN Choreography*](https://hal.science/hal-05665560v6),
 published at ICTAC 2026, and supports start/end events, choreography tasks, and
 AND, XOR and OR gateways.
 

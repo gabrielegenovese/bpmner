@@ -2,7 +2,7 @@ defmodule UiWeb.ConverterLive do
   use UiWeb, :live_view
 
   import UiWeb.ConverterComponents,
-    only: [converter: 1, theme_toggle: 1, analysis_panel: 1]
+    only: [converter: 1, theme_toggle: 1, analysis_panel: 1, github_link: 1]
 
   require Logger
 
@@ -86,11 +86,7 @@ defmodule UiWeb.ConverterLive do
         <nav class="flex items-center gap-1">
           <.theme_toggle />
           <.link navigate={~p"/info"} class="btn btn-ghost btn-sm">Info</.link>
-          <a
-            href="https://github.com/gabrielegenovese/bpmner"
-            target="_blank"
-            class="btn btn-ghost btn-sm"
-          >GitHub</a>
+          <.github_link />
         </nav>
       </header>
 
