@@ -13,7 +13,7 @@
 
 ## Infrastructure
 
-- [ ] Add CI for `cargo fmt`, `cargo clippy`, `cargo test`, `mix format`,
+- [x] Add CI for `cargo fmt`, `cargo clippy`, `cargo test`, `mix format`,
       `mix compile`, `mix test` and the Docker build.
 - [ ] Move the runtime stage to a slimmer base image: the current `elixir`
       image still ships build tools that the release does not need.

@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+  elixir:
+    name: Elixir checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MIX_ENV: test
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Elixir and Erlang
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "29"
+          elixir-version: "1.20.2"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "ui -> target"
+
+      - name: Cache Mix dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ui/deps
+            ui/_build
+          key: ${{ runner.os }}-mix-1.20.2-otp-29-${{ hashFiles('ui/mix.lock', 'crates/**', 'ui/native/**') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-1.20.2-otp-29-
+
+      - name: Install Hex and Rebar
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      - name: Compile
+        run: mix compile --warnings-as-errors
+
+      - name: Build assets
+        run: |
+          mix assets.setup
+          mix assets.build
+
+      - name: Test
+        run: mix test
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: bpmner:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start container
+        run: |
+          docker run -d --name bpmner-ci -p 4000:4000 bpmner:ci
+          for attempt in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4000/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs bpmner-ci
+          exit 1
+
+      - name: Verify NIF and TINA
+        run: |
+          docker exec bpmner-ci /app/bin/ui eval '
+            example = Enum.find(Ui.Examples.all(), &(&1.id == "paper-example"))
+            {:ok, xml} = Ui.Examples.read(example)
+            {:ok, _pnml} = Converter.convert_bpmn_to_pnml(xml, true)
+            {:ok, report} = Ui.Analysis.run(xml, "/usr/local/bin/sift", 200_000, 15)
+            true = report["ok"]
+            IO.puts("NIF and TINA OK")
+          '
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f bpmner-ci || true

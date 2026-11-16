@@ -2,7 +2,7 @@ defmodule UiWeb.ConverterLive do
   use UiWeb, :live_view
 
   import UiWeb.ConverterComponents,
-    only: [converter: 1, theme_toggle: 1, analysis_panel: 1, brand_mark: 1]
+    only: [converter: 1, theme_toggle: 1, analysis_panel: 1]
 
   require Logger
 
@@ -77,14 +77,11 @@ defmodule UiWeb.ConverterLive do
       </div>
 
       <header class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <.brand_mark />
-          <div>
-            <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
-            <p class="mt-0.5 text-sm text-base-content/60">
-              BPMN Choreography <span class="font-medium text-primary">⇢</span> Petri Net
-            </p>
-          </div>
+        <div>
+          <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
+          <p class="mt-0.5 text-sm text-base-content/60">
+            BPMN Choreography <span class="font-medium text-primary">⇢</span> Petri Net
+          </p>
         </div>
         <nav class="flex items-center gap-1">
           <.theme_toggle />

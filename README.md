@@ -1,5 +1,7 @@
 # BPMN Choreography → Petri Net Encoder
 
+[![CI](https://github.com/gabrielegenovese/bpmner/actions/workflows/ci.yml/badge.svg)](https://github.com/gabrielegenovese/bpmner/actions/workflows/ci.yml)
+
 A Rust library, command-line tool and Phoenix LiveView web application that
 encode **BPMN Choreography** diagrams into **Petri Nets**.
 

@@ -1,25 +1,6 @@
 defmodule UiWeb.ConverterComponents do
   use Phoenix.Component
 
-  def brand_mark(assigns) do
-    ~H"""
-    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-content shadow-md shadow-primary/20">
-      <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="6" cy="5" r="2.5" />
-        <circle cx="6" cy="19" r="2.5" />
-        <circle cx="18" cy="12" r="2.5" />
-        <path
-          d="M8.5 6.5 15 10.5M8.5 17.5 15 13.5"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.4"
-          stroke-linecap="round"
-        />
-      </svg>
-    </div>
-    """
-  end
-
   attr(:class, :string, default: nil)
 
   def theme_toggle(assigns) do
