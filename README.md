@@ -94,6 +94,7 @@ Open <http://localhost:4000>. The interface provides:
 - direct upload of a `.bpmn` file or selection of a bundled example;
 - BPMN and Petri net graph views, with a downloadable PNML and DOT export;
 - a switch between vertical and horizontal DOT layouts;
+- a full-screen mode for both the Petri net and BPMN views;
 - automatic safety/deadlock analysis, with the explored state count, a witness
   state for violations, and the raw analyzer log.
 

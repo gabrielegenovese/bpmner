@@ -106,3 +106,32 @@
 }
 
 /* This file is for your main application CSS */
+
+/* Full-screen converter panel */
+[data-fullscreen-root]:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background-color: var(--color-base-100);
+}
+
+[data-fullscreen-root]:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background-color: var(--color-base-100);
+}
+
+[data-fullscreen-root] .fullscreen-compress {
+  display: none;
+}
+
+[data-fullscreen-root].is-fullscreen .fullscreen-expand {
+  display: none;
+}
+
+[data-fullscreen-root].is-fullscreen .fullscreen-compress {
+  display: block;
+}

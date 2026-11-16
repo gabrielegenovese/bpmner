@@ -36,6 +36,7 @@ panel shows an explanatory warning.
 - View the BPMN diagram and the generated Petri net graph.
 - Download PNML and DOT exports, always including the initial marking.
 - Switch the DOT layout between vertical and horizontal.
+- Toggle the visualizers to full screen.
 - Automatically check the encoded net with TINA's `sift`:
   - safety (`L.safe`);
   - deadlock-freedom, accepting the intended final marking.

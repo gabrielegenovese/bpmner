@@ -1,6 +1,6 @@
 defmodule UiWeb.InfoLive do
   use UiWeb, :live_view
-  import UiWeb.ConverterComponents, only: [theme_toggle: 1]
+  import UiWeb.ConverterComponents, only: [theme_toggle: 1, brand_mark: 1]
 
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -9,10 +9,13 @@ defmodule UiWeb.InfoLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-3xl space-y-8 px-5 py-8 sm:px-6">
-      <header class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
-          <p class="mt-1 text-sm text-base-content/60">Encoding Details</p>
+      <header class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <.brand_mark />
+          <div>
+            <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
+            <p class="mt-0.5 text-sm text-base-content/60">Encoding Details</p>
+          </div>
         </div>
         <nav class="flex items-center gap-1">
           <.theme_toggle />

@@ -2,7 +2,7 @@
 
 ## UI
 
-- [ ] Add a full-screen button for the encoding output and the BPMN visualizer.
+- [x] Add a full-screen button for the encoding output and the BPMN visualizer.
 - [ ] Bundle chor-js locally instead of loading it from jsDelivr, so the BPMN
       diagram also works without internet access.
 - [ ] Add UI tests covering example loading, encoding, downloads and analysis

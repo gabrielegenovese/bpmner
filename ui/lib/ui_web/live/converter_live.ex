@@ -1,6 +1,8 @@
 defmodule UiWeb.ConverterLive do
   use UiWeb, :live_view
-  import UiWeb.ConverterComponents, only: [converter: 1, theme_toggle: 1, analysis_panel: 1]
+
+  import UiWeb.ConverterComponents,
+    only: [converter: 1, theme_toggle: 1, analysis_panel: 1, brand_mark: 1]
 
   require Logger
 
@@ -74,12 +76,15 @@ defmodule UiWeb.ConverterLive do
         </div>
       </div>
 
-      <header class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
-          <p class="mt-1 text-sm text-base-content/60">
-            BPMN Choreography <span class="text-primary">⇢</span> Petri Net
-          </p>
+      <header class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <.brand_mark />
+          <div>
+            <h1 class="text-3xl font-semibold tracking-tight">bpmner</h1>
+            <p class="mt-0.5 text-sm text-base-content/60">
+              BPMN Choreography <span class="font-medium text-primary">⇢</span> Petri Net
+            </p>
+          </div>
         </div>
         <nav class="flex items-center gap-1">
           <.theme_toggle />
@@ -92,12 +97,12 @@ defmodule UiWeb.ConverterLive do
         </nav>
       </header>
 
-      <section class="rounded-2xl border border-base-300/80 bg-base-100 p-3 shadow-sm">
+      <section class="rounded-2xl border border-base-300/80 bg-gradient-to-r from-primary/5 via-base-100 to-secondary/10 p-3 shadow-sm">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
           <form phx-change="select_example" class="w-full lg:w-60">
             <select
               name="example"
-              class="select select-sm w-full border-base-300 bg-base-200/40"
+              class="select select-sm w-full border-base-300 bg-base-200/40 focus:border-primary"
               aria-label="Load an example"
             >
               <option value="">Load an example…</option>
@@ -124,7 +129,11 @@ defmodule UiWeb.ConverterLive do
               class="file-input file-input-sm w-full text-xs sm:w-56"
             />
             <div class="flex items-center gap-2">
-              <button type="submit" class="btn btn-primary btn-sm" phx-disable-with="Encoding...">
+              <button
+                type="submit"
+                class="btn btn-primary btn-sm shadow-md shadow-primary/20"
+                phx-disable-with="Encoding..."
+              >
                 Encode
               </button>
               <span :for={err <- upload_errors(@uploads.bpmn)} class="badge badge-error badge-sm">
@@ -133,28 +142,18 @@ defmodule UiWeb.ConverterLive do
             </div>
           </form>
 
-          <div class="flex items-center justify-between gap-3 border-t border-base-300/70 pt-3 lg:ml-auto lg:border-0 lg:pt-0">
+          <div class="flex items-center gap-3 border-t border-base-300/70 pt-3 lg:ml-auto lg:border-0 lg:pt-0">
             <label
-              class="flex cursor-pointer items-center gap-2 text-xs text-base-content/60"
+              class="flex cursor-pointer items-center gap-2 text-xs text-base-content/70"
               title="Run TINA/sift automatically after encoding"
             >
               <input
                 type="checkbox"
-                class="toggle toggle-xs"
+                class="toggle toggle-primary toggle-xs"
                 checked={@auto_analyze}
                 phx-click="toggle_auto_analyze"
               /> Auto-analyze
             </label>
-
-            <button
-              type="button"
-              phx-click="analyze"
-              class="btn btn-outline btn-sm"
-              disabled={is_nil(@bpmn_xml) or @analysis_loading}
-              title="Run TINA/sift on the encoded Petri net"
-            >
-              {if @analysis_loading, do: "Analyzing…", else: "Analyze"}
-            </button>
           </div>
         </div>
 
@@ -222,12 +221,15 @@ defmodule UiWeb.ConverterLive do
     end
   end
 
-  def handle_event("analyze", _params, socket) do
-    {:noreply, start_analysis(socket)}
-  end
-
   def handle_event("toggle_auto_analyze", _params, socket) do
-    {:noreply, assign(socket, :auto_analyze, !socket.assigns.auto_analyze)}
+    auto_analyze = !socket.assigns.auto_analyze
+    socket = assign(socket, :auto_analyze, auto_analyze)
+
+    if auto_analyze and socket.assigns.bpmn_xml do
+      {:noreply, start_analysis(socket)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("set_layout", %{"layout" => layout}, socket) do

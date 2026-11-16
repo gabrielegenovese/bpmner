@@ -1,12 +1,24 @@
 defmodule UiWeb.ConverterComponents do
   use Phoenix.Component
 
-  attr(:bpmn_xml, :string, default: nil)
-  attr(:pnml, :string, default: nil)
-  attr(:dot, :string, default: nil)
-  attr(:active_tab, :string, default: "graph")
-  attr(:loading, :boolean, default: false)
-  attr(:rankdir_lr, :boolean, default: false)
+  def brand_mark(assigns) do
+    ~H"""
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-content shadow-md shadow-primary/20">
+      <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="5" r="2.5" />
+        <circle cx="6" cy="19" r="2.5" />
+        <circle cx="18" cy="12" r="2.5" />
+        <path
+          d="M8.5 6.5 15 10.5M8.5 17.5 15 13.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linecap="round"
+        />
+      </svg>
+    </div>
+    """
+  end
 
   attr(:class, :string, default: nil)
 
@@ -42,9 +54,21 @@ defmodule UiWeb.ConverterComponents do
     """
   end
 
+  attr(:bpmn_xml, :string, default: nil)
+  attr(:pnml, :string, default: nil)
+  attr(:dot, :string, default: nil)
+  attr(:active_tab, :string, default: "graph")
+  attr(:loading, :boolean, default: false)
+  attr(:rankdir_lr, :boolean, default: false)
+
   def converter(assigns) do
     ~H"""
-    <div class="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-base-300/80 bg-base-100 shadow-sm">
+    <div
+      id="converter-panel"
+      phx-hook="Fullscreen"
+      data-fullscreen-root
+      class="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-base-300/80 bg-base-100 shadow-sm ring-1 ring-primary/5"
+    >
       <%= cond do %>
         <% @loading -> %>
           <div class="flex flex-1 items-center justify-center text-sm text-base-content/40">
@@ -55,34 +79,55 @@ defmodule UiWeb.ConverterComponents do
             Upload a BPMN choreography or load an example to see the Petri net.
           </div>
         <% true -> %>
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300/70 px-2 py-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300/70 bg-base-200/30 px-2 py-2">
             <div class="inline-flex rounded-lg bg-base-200 p-0.5" role="tablist">
               <.tab_button label="Petri net" tab="graph" active_tab={@active_tab} />
               <.tab_button label="BPMN" tab="bpmn_diagram" active_tab={@active_tab} />
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <div
-                class="inline-flex items-center rounded-lg bg-base-200 p-0.5"
-                role="group"
-                aria-label="Graph layout"
-              >
-                <.layout_button
-                  label="Vertical"
-                  layout="vertical"
-                  active={!@rankdir_lr}
-                />
-                <.layout_button
-                  label="Horizontal"
-                  layout="horizontal"
-                  active={@rankdir_lr}
-                />
-              </div>
+              <div :if={@active_tab == "graph"} class="flex items-center gap-2">
+                <div
+                  class="inline-flex items-center rounded-lg bg-base-200 p-0.5"
+                  role="group"
+                  aria-label="Graph layout"
+                >
+                  <.layout_button label="Vertical" layout="vertical" active={!@rankdir_lr} />
+                  <.layout_button label="Horizontal" layout="horizontal" active={@rankdir_lr} />
+                </div>
 
-              <span class="hidden h-5 w-px bg-base-300 sm:block" aria-hidden="true"></span>
+                <span class="hidden h-5 w-px bg-base-300 sm:block" aria-hidden="true"></span>
+              </div>
 
               <.download_link :if={@dot} content={@dot} filename="output.dot" label="DOT" />
               <.download_link :if={@pnml} content={@pnml} filename="output.pnml" label="PNML" />
+
+              <button
+                type="button"
+                data-fullscreen-toggle
+                aria-pressed="false"
+                class="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-primary"
+                title="Enter full screen"
+              >
+                <svg
+                  class="fullscreen-expand h-4 w-4 fill-none stroke-current"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+                <svg
+                  class="fullscreen-compress h-4 w-4 fill-none stroke-current"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M9 3.75v4.5m0-4.5H4.5m4.5 0L3.75 9M9 20.25v-4.5m0 4.5H4.5m4.5 0l-5.25-5.25M20.25 9h-4.5m4.5 0V4.5m0 4.5L15 3.75M20.25 15h-4.5m4.5 0v4.5m0-4.5L15 20.25" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -118,6 +163,9 @@ defmodule UiWeb.ConverterComponents do
 
           this.handleEvent("render_bpmn", ({ xml }) => this.renderBpmn(xml));
           this.handleEvent("resize_bpmn", () => requestAnimationFrame(() => this.fit()));
+
+          this.onFullscreenChange = () => requestAnimationFrame(() => this.fit());
+          document.addEventListener("fullscreenchange", this.onFullscreenChange);
 
           this.drag = false;
           this.last = null;
@@ -165,6 +213,7 @@ defmodule UiWeb.ConverterComponents do
         },
 
         destroyed() {
+          document.removeEventListener("fullscreenchange", this.onFullscreenChange);
           this.viewer?.destroy();
         },
 
@@ -327,8 +376,8 @@ defmodule UiWeb.ConverterComponents do
       aria-selected={to_string(@active_tab == @tab)}
       class={[
         "rounded-md px-3 py-1 text-xs font-medium transition-colors",
-        @active_tab == @tab && "bg-base-100 text-base-content shadow-sm",
-        @active_tab != @tab && "text-base-content/60 hover:text-base-content"
+        @active_tab == @tab && "bg-primary/10 text-primary shadow-sm",
+        @active_tab != @tab && "text-base-content/60 hover:bg-base-100/60 hover:text-base-content"
       ]}
     >
       {@label}
@@ -349,8 +398,8 @@ defmodule UiWeb.ConverterComponents do
       aria-pressed={to_string(@active)}
       class={[
         "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
-        @active && "bg-base-100 text-base-content shadow-sm",
-        !@active && "text-base-content/60 hover:text-base-content"
+        @active && "bg-primary/10 text-primary shadow-sm",
+        !@active && "text-base-content/60 hover:bg-base-100/60 hover:text-base-content"
       ]}
     >
       {@label}
@@ -377,7 +426,7 @@ defmodule UiWeb.ConverterComponents do
       :if={is_binary(@content)}
       href={@href}
       download={@filename}
-      class="btn btn-ghost btn-xs gap-1.5 text-base-content/60 hover:text-base-content"
+      class="btn btn-ghost btn-xs gap-1.5 text-base-content/55 hover:bg-primary/5 hover:text-primary"
     >
       <svg
         class="h-3.5 w-3.5 fill-current shrink-0"
@@ -412,7 +461,10 @@ defmodule UiWeb.ConverterComponents do
     ~H"""
     <div class="space-y-3 rounded-2xl border border-base-300/80 bg-base-100 p-4 shadow-sm">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-sm font-semibold">Petri net analysis</h2>
+        <h2 class="flex items-center gap-2 text-sm font-semibold">
+          <span class="inline-block h-2 w-2 rounded-full bg-gradient-to-br from-primary to-accent"></span>
+          Petri net analysis
+        </h2>
         <span class="text-xs text-base-content/50">TINA / sift</span>
       </div>
 
@@ -469,7 +521,10 @@ defmodule UiWeb.ConverterComponents do
 
   defp property_card(assigns) do
     ~H"""
-    <div class="space-y-1 rounded-xl border border-base-300/70 bg-base-200/30 p-3">
+    <div class={[
+      "space-y-1 rounded-xl border p-3 transition-colors",
+      property_class(@result["status"])
+    ]}>
       <div class="flex items-center justify-between gap-2">
         <p class="text-sm font-medium">{@result["property"]}</p>
         <span class={["badge badge-sm", status_class(@result["status"])]}>
@@ -491,6 +546,10 @@ defmodule UiWeb.ConverterComponents do
   defp status_class("holds"), do: "badge-success"
   defp status_class("violated"), do: "badge-error"
   defp status_class(_), do: "badge-warning"
+
+  defp property_class("holds"), do: "border-success/30 bg-success/5"
+  defp property_class("violated"), do: "border-error/30 bg-error/5"
+  defp property_class(_), do: "border-warning/30 bg-warning/5"
 
   defp analysis_log(analysis) do
     [analysis["safety"], analysis["deadlock"]]
