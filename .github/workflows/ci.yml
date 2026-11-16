@@ -117,7 +117,10 @@ jobs:
 
       - name: Start container
         run: |
-          docker run -d --name bpmner-ci -p 4000:4000 bpmner:ci
+          SECRET_KEY_BASE="$(openssl rand -base64 48)"
+          docker run -d --name bpmner-ci -p 4000:4000 \
+            --env SECRET_KEY_BASE="$SECRET_KEY_BASE" \
+            bpmner:ci
           for attempt in $(seq 1 45); do
             if curl -fsS http://127.0.0.1:4000/ >/dev/null; then
               exit 0
