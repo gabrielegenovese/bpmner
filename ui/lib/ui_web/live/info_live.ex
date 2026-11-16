@@ -32,9 +32,10 @@ defmodule UiWeb.InfoLive do
         <p class="text-base-content/80">
           This tool encodes BPMN choreography diagrams into Petri nets. The
           translation follows the encoding introduced in the paper
-          "A Petri Net Semantics for BPMN Choreographies"<.ref n="1" />,
-          which gives a formal, provably correct semantics to BPMN choreographies
-          by mapping them onto standard Petri nets.
+          "A Petri Net Semantics for Acyclic Safe BPMN Choreography"<.ref n="1" />,
+          published at ICTAC 2026, which gives a formal, provably correct
+          semantics to acyclic safe BPMN choreographies by mapping them onto
+          standard Petri nets.
         </p>
       </section>
 
@@ -196,7 +197,8 @@ defmodule UiWeb.InfoLive do
         <ol class="list-decimal list-inside space-y-1 text-sm text-base-content/70">
           <li id="ref-1">
             G. Genovese, C. Di Giusto, I. Lanese, E. Tuosto.
-            <em>A Petri Net Semantics for BPMN Choreographies.</em>
+            <em>A Petri Net Semantics for Acyclic Safe BPMN Choreography.</em>
+            ICTAC 2026.
             <a href="https://hal.science/hal-05665560" target="_blank" class="link link-primary">
               hal.science/hal-05665560
             </a>
